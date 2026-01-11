@@ -2,7 +2,7 @@
 
 **Unlimited Cloud Storage, Powered by Telegram.**
 
-Cloudra is a modern, privacy-focused desktop cloud storage client that leverages Telegram's unlimited file storage API. Built with **Tauri (Rust)** and **React**, it offers a premium, Google Drive-like experience for managing your files without the storage limits.
+Cloudra is a modern, privacy-focused desktop cloud storage client that leverages Telegram's unlimited file storage API. Built with **Tauri (Rust)** and **React**, it offers a premium, high-performance experience with a stunning "Technical Galaxy" aesthetic.
 
 ## 🌟 Features
 
@@ -11,32 +11,32 @@ Cloudra is a modern, privacy-focused desktop cloud storage client that leverages
 - **2GB Single File Limit**: Upload individual files up to 2GB (4GB for Premium users).
 - **Unlimited Total Space**: No cap on the total amount of data you can store.
 
-### 🎨 Modern & Premium UI
-- **Google Drive-Inspired Design**: Familiar, intuitive, and clean interface with a focus on usability.
-- **Adaptive Dark/Light Mode**: Fully responsive theme that respects system settings and persists your preference.
-- **Micro-Interactions**: Smooth animations using `framer-motion` for a polished feel.
+### 🎨 "Technical Galaxy" Design
+- **Premium Dark Aesthetic**: A deeply immersive dark theme with cyan accents, glassmorphism, and subtle glow effects.
+- **Glassmorphic Interface**: Panels and sidebars feature blurred backdrops for a modern, depth-rich feel.
+- **Micro-Interactions**: Fluid animations powered by `framer-motion` for every interaction.
 - **View Options**: Toggle between **Grid** and **List** views with sortable columns.
 
 ### 🔍 Powerful Search & Organization
 - **Real-Time Search**: Instantly find files and folders with a type-ahead dropdown search.
 - **Smart Folder System**: Create nested folders to organize your content (metadata stored locally).
-- **Starred Items**: Mark important files or folders with a star for quick access in the "Starred" tab.
+- **Starred Items**: Mark important files or folders with a star for quick access.
 - **Recent Files**: Quickly access your most recently uploaded or modified files.
 
 ### ⚡ Advanced File Management
 - **Drag & Drop Uploads**: Seamlessly upload files by dragging them into the app.
-- **Multi-File Queue**: Robust upload queue with real-time progress, concurrent processing, and status indicators.
+- **Multi-File Queue**: specific visual design for upload progress with "Command Terminal" aesthetics.
+- **Custom Interaction Modals**: Replaced native system prompts with beautiful, theme-consistent modals for Renaming, Deleting, and Creating Folders.
 - **File Previews**: Click to preview supported files directly within the app.
-- **Rename & Edit**: Full support for renaming files and folders.
 
 ### 🗑️ Trash & Recovery
-- **Soft Delete**: Deleted items move to a Trash bin first, preventing accidental data loss.
+- **Soft Delete**: Deleted items move to a Trash bin first.
 - **Instant Restore**: Restore files or folders to their original location with one click.
 - **Empty Trash**: Permanently clear space when you're sure.
 
 ### 🔒 Privacy & Security
 - **Direct MTProto Connection**: Connects directly to Telegram servers from your local machine. **No middleman servers.**
-- **Local Metadata**: Folder structures and file names are stored in a local encrypted database (`metadata.json`), ensuring your organization structure remains private.
+- **Local Metadata**: Folder structures and file names are stored in a local encrypted database (`metadata.json`).
 - **Encrypted Session**: Your Telegram session is stored securely locally.
 
 ## 🛠️ Tech Stack
