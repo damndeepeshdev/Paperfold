@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion';
+import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
 import { ChevronDown, ArrowRight, Loader2, Search } from 'lucide-react';
 
@@ -337,7 +337,8 @@ export default function Auth({ onLogin }: AuthProps) {
         <div className="h-screen w-full bg-[#030712] text-white flex overflow-hidden font-sans selection:bg-blue-500/30 relative">
 
             {/* Window Drag Region */}
-            <div data-tauri-drag-region className="absolute top-0 left-0 right-0 h-8 z-50 bg-transparent" />
+            {/* Window Drag Region - Fixed Position & Max Z-Index */}
+            <div data-tauri-drag-region className="fixed top-0 left-0 right-0 h-10 z-[9999]" />
 
             {/* Background Grid Pattern (Technical Look) */}
             <div className="absolute inset-0 pointer-events-none opacity-20"
@@ -520,7 +521,7 @@ export default function Auth({ onLogin }: AuthProps) {
             </div>
 
             {/* Right Panel - Galaxy View (Masked Arch) */}
-            <div className="absolute right-0 top-0 bottom-0 w-[55%] pointer-events-none hidden md:block overflow-hidden">
+            <div className="relative flex-1 hidden md:block h-full overflow-hidden pointer-events-none">
                 {/* 1. The Arch Mask - Enhanced with border glow */}
                 <div className="absolute inset-x-0 bottom-0 top-12 border-t border-l border-white/10 rounded-tl-[300px] overflow-hidden backdrop-blur-[1px] shadow-[inset_10px_10px_50px_rgba(0,0,0,0.5)]">
                     <GalaxyView mouseX={mouseX} mouseY={mouseY} />
