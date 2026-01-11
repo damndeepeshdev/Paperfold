@@ -259,12 +259,6 @@ export default function Auth({ onLogin }: AuthProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        // Clear lint warning for unused useEffect by using a dummy effect if needed, 
-        // OR better yet, actually remove it if not needed. 
-        // But since I'm overwriting, I'll just keep it clean.
-        // Wait, I need to keep the imports.
-        // I'll leave useEffect in import but not use it, or just use it for something simple to satisfy linter if strictly configured.
-        // Actually, previous user edits had issues. I'll stick to a clean implementation.
     }, []);
 
     const filteredCountries = useMemo(() => {
@@ -325,27 +319,29 @@ export default function Auth({ onLogin }: AuthProps) {
     return (
         <div className="h-screen w-full bg-[#050505] text-white flex overflow-hidden font-sans selection:bg-blue-500/30 relative">
 
-            {/* Window Drag Region - FIXED Issue */}
+            {/* Window Drag Region */}
             <div data-tauri-drag-region className="absolute top-0 left-0 right-0 h-8 z-50 bg-transparent" />
 
-            {/* Background Particles */}
+            {/* Background Particles (Stars) */}
             <div className="absolute inset-0 pointer-events-none">
-                {[...Array(20)].map((_, i) => (
+                {[...Array(50)].map((_, i) => (
                     <motion.div
                         key={i}
-                        className="absolute w-1 h-1 bg-white rounded-full opacity-0"
+                        className="absolute bg-white rounded-full"
                         style={{
+                            width: Math.random() < 0.5 ? 1 : 2,
+                            height: Math.random() < 0.5 ? 1 : 2,
                             top: `${Math.random() * 100}%`,
                             left: `${Math.random() * 100}%`,
+                            opacity: Math.random() * 0.5
                         }}
                         animate={{
-                            opacity: [0, 0.4, 0],
-                            scale: [0, 1.5, 0],
+                            opacity: [0.1, 0.5, 0.1],
                         }}
                         transition={{
-                            duration: 2 + Math.random() * 3,
+                            duration: 3 + Math.random() * 5,
                             repeat: Infinity,
-                            delay: Math.random() * 2,
+                            delay: Math.random() * 5,
                         }}
                     />
                 ))}
@@ -365,16 +361,16 @@ export default function Auth({ onLogin }: AuthProps) {
                             initial={{ rotate: -180, scale: 0 }}
                             animate={{ rotate: 0, scale: 1 }}
                             transition={{ type: "spring", duration: 0.8 }}
-                            className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)]"
+                            className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.5)]"
                         >
-                            <span className="font-bold text-xl">P</span>
+                            <span className="font-bold text-xl">S</span>
                         </motion.div>
-                        <span className="text-xl font-bold tracking-tight">Paperfold</span>
+                        <span className="text-xl font-bold tracking-tight">Solaris</span>
                     </div>
 
                     <h1 className="text-4xl md:text-5xl font-light tracking-tight mb-2 leading-tight">
                         Sign in to <br />
-                        <span className="font-medium text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">Paperfold</span>
+                        <span className="font-medium text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">Solaris</span>
                     </h1>
                     <p className="text-gray-500 text-lg">using Telegram</p>
                 </motion.div>
@@ -392,12 +388,11 @@ export default function Auth({ onLogin }: AuthProps) {
                                 <div className="space-y-4">
                                     <label className="block text-sm font-medium text-gray-400 uppercase tracking-wider text-xs">Phone Number</label>
                                     <div className="flex gap-3">
-                                        {/* Country Code Dropdown */}
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                className="h-14 bg-white/5 border border-white/10 rounded-xl px-4 flex items-center gap-2 hover:bg-white/10 hover:border-white/20 transition-all min-w-[100px] outline-none focus:ring-1 focus:ring-blue-500/50"
+                                                className="h-14 bg-white/5 border border-white/10 rounded-xl px-4 flex items-center gap-2 hover:bg-white/10 hover:border-white/20 transition-all min-w-[100px] outline-none focus:ring-1 focus:ring-orange-500/50"
                                             >
                                                 <span className="text-lg font-mono tracking-wide">{countryCode}</span>
                                                 <ChevronDown className="w-4 h-4 text-gray-400 ml-auto" />
@@ -411,7 +406,6 @@ export default function Auth({ onLogin }: AuthProps) {
                                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                         className="absolute top-full left-0 mt-2 w-72 max-h-[300px] overflow-hidden bg-[#121212] border border-white/10 rounded-xl shadow-2xl z-50 flex flex-col"
                                                     >
-                                                        {/* Sticky Search Header */}
                                                         <div className="p-3 border-b border-white/5 bg-[#121212] sticky top-0 z-10">
                                                             <div className="relative">
                                                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -446,9 +440,6 @@ export default function Auth({ onLogin }: AuthProps) {
                                                                     <span className="text-xs text-gray-500 font-mono bg-white/5 px-1.5 py-0.5 rounded">{c.code}</span>
                                                                 </button>
                                                             ))}
-                                                            {filteredCountries.length === 0 && (
-                                                                <div className="p-4 text-center text-gray-500 text-sm">No results found</div>
-                                                            )}
                                                         </div>
                                                     </motion.div>
                                                 )}
@@ -471,7 +462,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
                                     disabled={loading || !phone}
-                                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]"
+                                    className="w-full h-14 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]"
                                 >
                                     {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                         <>
@@ -482,36 +473,27 @@ export default function Auth({ onLogin }: AuthProps) {
                             </form>
                         )}
 
+                        {/* .. (omitted other form steps for brevity, identical to before just different color) ... */}
+                        {/* Actually need to keep them as is for functionality */}
                         {step === 'code' && (
                             <form onSubmit={handleCodeSubmit} className="space-y-6">
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <label className="text-sm font-medium text-gray-400 uppercase tracking-wider text-xs">Enter Code</label>
-                                        <button type="button" onClick={() => setStep('phone')} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Change Phone</button>
+                                        <button type="button" onClick={() => setStep('phone')} className="text-xs text-orange-400 hover:text-orange-300 transition-colors">Change Phone</button>
                                     </div>
                                     <input
                                         type="text"
                                         value={code}
                                         onChange={(e) => setCode(e.target.value)}
                                         placeholder="xxxxx"
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg text-center font-mono tracking-[0.5em] focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder:text-gray-700"
+                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg text-center font-mono tracking-[0.5em] focus:outline-none focus:border-orange-500/50 focus:bg-white/10 transition-all placeholder:text-gray-700"
                                         autoFocus
                                         maxLength={5}
                                     />
-                                    <p className="text-xs text-center text-gray-500">
-                                        We've sent a code to your Telegram app.
-                                    </p>
+                                    <p className="text-xs text-center text-gray-500">We've sent a code to your Telegram app.</p>
                                 </div>
-
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    type="submit"
-                                    disabled={loading || code.length < 5}
-                                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                                >
-                                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Verify Code"}
-                                </motion.button>
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading || code.length < 5} className="w-full h-14 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">{loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Verify Code"}</motion.button>
                             </form>
                         )}
 
@@ -519,35 +501,16 @@ export default function Auth({ onLogin }: AuthProps) {
                             <form onSubmit={handlePasswordSubmit} className="space-y-6">
                                 <div className="space-y-4">
                                     <label className="text-sm font-medium text-gray-400 uppercase tracking-wider text-xs">Two-Step Verification</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Enter your cloud password"
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600"
-                                        autoFocus
-                                    />
+                                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your cloud password" className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg focus:outline-none focus:border-orange-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600" autoFocus />
                                 </div>
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
-                                >
-                                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Unlock"}
-                                </motion.button>
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full h-14 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg">{loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Unlock"}</motion.button>
                             </form>
                         )}
                     </motion.div>
                 </AnimatePresence>
 
                 {error && (
-                    <motion.div
-                        initial={{ opacity: 0, marginTop: 0 }}
-                        animate={{ opacity: 1, marginTop: 16 }}
-                        className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 text-sm backdrop-blur-sm"
-                    >
+                    <motion.div initial={{ opacity: 0, marginTop: 0 }} animate={{ opacity: 1, marginTop: 16 }} className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 text-sm backdrop-blur-sm">
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_10px_red]" />
                         {error}
                     </motion.div>
@@ -558,123 +521,126 @@ export default function Auth({ onLogin }: AuthProps) {
                 </div>
             </div>
 
-            {/* Right Panel - 3D Visual */}
-            <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black">
-                {/* Deep Space Background */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#000000] to-[#000000]" />
-
-                {/* 3D Wormhole Simulation */}
-                <div className="w-[800px] h-[800px] shrink-0 relative flex items-center justify-center perspective-1000">
-                    <InterstellarWormhole />
-                </div>
+            {/* Right Panel - Solar System Visual */}
+            <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-[#020205]">
+                <SolarSystem />
             </div>
         </div>
     );
 }
 
-function InterstellarWormhole() {
-    // Generate particles mathematically for the accretion disk
-    // We use polar coordinates (r, theta) to distribute particles in a ring
-    const debris = useMemo(() => {
-        return Array.from({ length: 400 }).map((_, i) => {
-            const angle = Math.random() * Math.PI * 2;
-            const radius = 180 + Math.random() * 120; // 180px to 300px radius
-            const size = Math.random() * 2;
-            const speed = 20 + Math.random() * 20; // Seconds per rotation
-            const delay = Math.random() * -20;
-            const opacity = 0.3 + Math.random() * 0.7;
-            return { angle, radius, size, speed, delay, opacity, id: i };
-        });
-    }, []);
-
+function SolarSystem() {
     return (
-        <div className="relative w-full h-full flex items-center justify-center">
-            {/* 1. Deep Space Background - Dynamic Stars */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)] z-0" />
-                {[...Array(60)].map((_, i) => {
-                    const size = Math.random() > 0.9 ? 2 : 1;
-                    return (
-                        <motion.div
-                            key={`star-${i}`}
-                            className="absolute bg-blue-100 rounded-full"
-                            style={{
-                                width: size,
-                                height: size,
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
-                                opacity: Math.random() * 0.8
-                            }}
-                            animate={{ opacity: [0.2, 0.8, 0.2] }}
-                            transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 5 }}
-                        />
-                    );
-                })}
-            </div>
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+            {/* Dynamic Ambient Background */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(253,184,19,0.05)_0%,_transparent_60%)]" />
 
-            {/* Container for the Black Hole */}
-            <div className="relative w-[800px] h-[800px] flex items-center justify-center scale-100">
+            {/* 3D Container (Tilt) */}
+            <div className="relative w-[1000px] h-[1000px] scale-90" style={{ transformStyle: 'preserve-3d', transform: 'rotateX(60deg) rotateZ(-10deg)' }}>
 
-                {/* 2. Gravitational Lensing Halo (Rear Disk warped over top) */}
-                {/* This mimics the light form behind the hole being bent over it */}
-                <div className="absolute w-[600px] h-[600px] rounded-full animate-[spin_60s_linear_infinite_reverse] opacity-50 blur-[30px] mix-blend-screen">
-                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0%,rgba(6,182,212,0.1)_10%,rgba(34,211,238,0.4)_30%,rgba(59,130,246,0.2)_50%,transparent_60%)]"
-                        style={{ transform: 'rotate(-45deg) scaleY(1.3)' }} />
+                {/* 1. THE SUN */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full shadow-[0_0_100px_rgba(253,186,116,0.6)] z-10"
+                    style={{
+                        background: 'radial-gradient(circle at center, #FFF7ED 0%, #FDBA74 40%, #EA580C 100%)',
+                        boxShadow: '0 0 60px #F97316, 0 0 100px rgba(253,186,116,0.2)'
+                    }}
+                >
+                    {/* Sun Atmosphere Pulse */}
+                    <div className="absolute inset-0 rounded-full bg-orange-400 opacity-30 animate-ping" />
                 </div>
 
-                {/* 3. The Main Accretion Disk - Mathematical Particles */}
-                {/* We rotate the entire container to get the correct viewing angle */}
-                <div className="absolute w-[800px] h-[800px] z-20" style={{ transform: 'rotateX(70deg) rotateZ(-10deg)', transformStyle: 'preserve-3d' }}>
+                {/* 2. PLANETS (Simplified scale/distance for aesthetics) */}
 
-                    {/* Continuous Gaseous Disk (Base Layer) */}
-                    <div className="absolute inset-[150px] rounded-full border-[60px] border-cyan-500/10 blur-[20px] animate-[spin_30s_linear_infinite]"
-                        style={{ boxShadow: '0 0 100px rgba(6,182,212,0.2)' }}
-                    />
+                {/* Mercury */}
+                <PlanetOrbit size={450} duration={10} delay={0}>
+                    <div className="w-3 h-3 rounded-full bg-gray-400 shadow-[0_0_5px_gray]" />
+                </PlanetOrbit>
 
-                    {/* Individual Debris Particles */}
-                    {debris.map((p) => (
-                        <div
-                            key={p.id}
-                            className="absolute rounded-full bg-cyan-300 shadow-[0_0_5px_cyan]"
-                            style={{
-                                width: p.size,
-                                height: p.size,
-                                left: '50%',
-                                top: '50%',
-                                opacity: p.opacity,
-                                transform: `rotate(${p.angle}rad) translateX(${p.radius}px)`, // Polar placement
-                                animation: `orbit ${p.speed}s linear infinite`,
-                                animationDelay: `${p.delay}s`
-                            }}
-                        />
-                    ))}
+                {/* Venus */}
+                <PlanetOrbit size={550} duration={15} delay={-5}>
+                    <div className="w-4 h-4 rounded-full bg-yellow-200 shadow-[0_0_10px_rgba(254,240,138,0.5)]" />
+                </PlanetOrbit>
 
-                    {/* Inner Hot Ring (Doppler Effect - Brighter on left) */}
-                    <div className="absolute inset-[180px] rounded-full border-[10px] border-transparent border-l-white/60 border-t-cyan-300/40 border-b-cyan-300/40 border-r-transparent blur-[4px] animate-[spin_15s_linear_infinite]" />
-                </div>
+                {/* Earth */}
+                <PlanetOrbit size={680} duration={20} delay={-12}>
+                    <div className="w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                        {/* Moon */}
+                        <div className="absolute -top-3 left-1/2 w-1 h-1 bg-gray-300 rounded-full opacity-80" />
+                    </div>
+                </PlanetOrbit>
 
-                {/* 4. The Event Horizon (Shadow) */}
-                <div className="relative w-[280px] h-[280px] bg-black rounded-full z-30 shadow-[0_0_80px_rgba(6,182,212,0.3)] flex items-center justify-center">
-                    {/* Photon Ring (Sharp bright circle) */}
-                    <div className="absolute inset-[1px] rounded-full border-[1.5px] border-cyan-100/70 blur-[0.5px] shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+                {/* Mars */}
+                <PlanetOrbit size={800} duration={25} delay={-8}>
+                    <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                </PlanetOrbit>
 
-                    {/* Singularity Void */}
-                    <div className="absolute inset-[4px] bg-black rounded-full" />
-                </div>
+                {/* Jupiter */}
+                <PlanetOrbit size={1100} duration={40} delay={-20}>
+                    <div className="w-10 h-10 rounded-full bg-orange-200 shadow-[0_0_20px_rgba(253,186,116,0.4)] overflow-hidden flex items-center justify-center"
+                        style={{ background: 'linear-gradient(45deg, #FDE68A, #D97706, #78350F)' }}>
+                        {/* Bands */}
+                        <div className="w-full h-1 bg-black/10 absolute top-3" />
+                        <div className="w-full h-2 bg-black/10 absolute bottom-3" />
+                    </div>
+                </PlanetOrbit>
 
-                {/* 5. Front Lensing (Disk wrapping UNDER) */}
-                <div className="absolute w-[650px] h-[300px] z-40 opacity-40 mix-blend-screen pointer-events-none"
-                    style={{ top: '60%', filter: 'blur(20px)' }}>
-                    <div className="w-full h-full bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.5)_0%,transparent_70%)]" />
-                </div>
+                {/* Saturn */}
+                <PlanetOrbit size={1400} duration={55} delay={-15}>
+                    <div className="relative">
+                        <div className="w-8 h-8 rounded-full bg-[#EAD6A8] shadow-[0_0_15px_rgba(234,214,168,0.3)]" />
+                        {/* Rings */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border-[6px] border-[#EAD6A8]/40 border-t-[#EAD6A8]/20 border-b-[#EAD6A8]/60 blur-[1px]" />
+                    </div>
+                </PlanetOrbit>
+
+                {/* Uranus */}
+                <PlanetOrbit size={1650} duration={70} delay={-30}>
+                    <div className="w-6 h-6 rounded-full bg-cyan-300 shadow-[0_0_15px_rgba(103,232,249,0.4)] opacity-80" />
+                </PlanetOrbit>
+
+                {/* Neptune */}
+                <PlanetOrbit size={1850} duration={85} delay={-40}>
+                    <div className="w-6 h-6 rounded-full bg-blue-700 shadow-[0_0_15px_rgba(29,78,216,0.5)] opacity-80" />
+                </PlanetOrbit>
+
             </div>
 
             <style>{`
-                @keyframes orbit {
-                    from { transform: rotate(0deg) translateX(var(--radius)); }
-                    to { transform: rotate(360deg) translateX(var(--radius)); }
+                @keyframes orbitMove {
+                    from { transform: rotate(0deg) translateX(50%) rotate(0deg); }
+                    to { transform: rotate(360deg) translateX(50%) rotate(-360deg); } 
+                    /* Inner rotate cancels out parent rotation so planet stays upright if 2D, 
+                       but here we are in 3D transform so it rotates around Z. */
                 }
             `}</style>
+        </div>
+    );
+}
+
+// Helper component for orbits
+function PlanetOrbit({ size, duration, delay, children }: { size: number, duration: number, delay: number, children: React.ReactNode }) {
+    return (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+            style={{
+                width: size,
+                height: size,
+                boxShadow: 'inset 0 0 20px rgba(255,255,255,0.02)'
+            }}
+        >
+            <div className="absolute top-0 left-0 w-full h-full animate-[spin_linear_infinite]"
+                style={{
+                    animationDuration: `${duration}s`,
+                    animationDelay: `${delay}s`
+                }}
+            >
+                {/* Planet Container - Positioned at edge */}
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2">
+                    {/* Counter-rotate to keep planet lighting consistent (optional, currently just passing children) */}
+                    <div style={{ transform: 'rotateX(-60deg)' }}> {/* Correct tilt for 3D view */}
+                        {children}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
