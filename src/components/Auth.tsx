@@ -365,7 +365,7 @@ export default function Auth({ onLogin }: AuthProps) {
                             initial={{ rotate: -180, scale: 0 }}
                             animate={{ rotate: 0, scale: 1 }}
                             transition={{ type: "spring", duration: 0.8 }}
-                            className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)]"
+                            className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center shadow-[0_0_20px_rgba(234,88,12,0.5)]"
                         >
                             <span className="font-bold text-xl">P</span>
                         </motion.div>
@@ -397,7 +397,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                className="h-14 bg-white/5 border border-white/10 rounded-xl px-4 flex items-center gap-2 hover:bg-white/10 hover:border-white/20 transition-all min-w-[100px] outline-none focus:ring-1 focus:ring-blue-500/50"
+                                                className="h-14 bg-white/5 border border-white/10 rounded-xl px-4 flex items-center gap-2 hover:bg-white/10 hover:border-white/20 transition-all min-w-[100px] outline-none focus:ring-1 focus:ring-orange-500/50"
                                             >
                                                 <span className="text-lg font-mono tracking-wide">{countryCode}</span>
                                                 <ChevronDown className="w-4 h-4 text-gray-400 ml-auto" />
@@ -460,7 +460,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value)}
                                             placeholder="98765 43210"
-                                            className="flex-1 h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600 font-medium tracking-wide"
+                                            className="flex-1 h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg focus:outline-none focus:border-orange-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600 font-medium tracking-wide"
                                             autoFocus
                                         />
                                     </div>
@@ -471,7 +471,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
                                     disabled={loading || !phone}
-                                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]"
+                                    className="w-full h-14 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(234,88,12,0.3)] hover:shadow-[0_0_30px_rgba(234,88,12,0.5)]"
                                 >
                                     {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                         <>
@@ -487,14 +487,14 @@ export default function Auth({ onLogin }: AuthProps) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <label className="text-sm font-medium text-gray-400 uppercase tracking-wider text-xs">Enter Code</label>
-                                        <button type="button" onClick={() => setStep('phone')} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Change Phone</button>
+                                        <button type="button" onClick={() => setStep('phone')} className="text-xs text-orange-400 hover:text-orange-300 transition-colors">Change Phone</button>
                                     </div>
                                     <input
                                         type="text"
                                         value={code}
                                         onChange={(e) => setCode(e.target.value)}
                                         placeholder="xxxxx"
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg text-center font-mono tracking-[0.5em] focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder:text-gray-700"
+                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg text-center font-mono tracking-[0.5em] focus:outline-none focus:border-orange-500/50 focus:bg-white/10 transition-all placeholder:text-gray-700"
                                         autoFocus
                                         maxLength={5}
                                     />
@@ -508,7 +508,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
                                     disabled={loading || code.length < 5}
-                                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                    className="w-full h-14 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                                 >
                                     {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Verify Code"}
                                 </motion.button>
@@ -524,7 +524,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter your cloud password"
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600"
+                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-lg focus:outline-none focus:border-orange-500/50 focus:bg-white/10 transition-all placeholder:text-gray-600"
                                         autoFocus
                                     />
                                 </div>
@@ -533,7 +533,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
+                                    className="w-full h-14 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
                                 >
                                     {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Unlock"}
                                 </motion.button>
@@ -561,7 +561,7 @@ export default function Auth({ onLogin }: AuthProps) {
             {/* Right Panel - 3D Visual */}
             <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black">
                 {/* Deep Space Background */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#000000] to-[#000000]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-900/10 via-[#000000] to-[#000000]" />
 
                 {/* 3D Wormhole Simulation */}
                 <div className="w-[800px] h-[800px] shrink-0 relative flex items-center justify-center perspective-1000">
@@ -575,86 +575,98 @@ export default function Auth({ onLogin }: AuthProps) {
 function InterstellarWormhole() {
     return (
         <div className="relative w-full h-full flex items-center justify-center">
-            {/* 1. Star Warp Tunnel (Background) */}
+            {/* 1. Deep Space Background Subtle Dust */}
             <div className="absolute inset-0 overflow-hidden">
-                {[...Array(50)].map((_, i) => (
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)] z-0" />
+                {[...Array(30)].map((_, i) => (
                     <motion.div
-                        key={`star-warp-${i}`}
-                        className="absolute top-1/2 left-1/2 w-0.5 h-[400px] bg-gradient-to-t from-transparent via-cyan-100 to-transparent opacity-0 mix-blend-screen"
+                        key={`dust-${i}`}
+                        className="absolute w-1 h-1 bg-orange-100/20 rounded-full blur-[1px]"
                         style={{
-                            transformOrigin: 'center bottom',
-                            transform: `translate(-50%, -50%) rotate(${i * 7.2}deg) translateY(-200px)`
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
                         }}
                         animate={{
-                            height: ['100px', '500px', '800px'],
-                            opacity: [0, 0.6, 0],
-                            y: [0, -500]
+                            opacity: [0, 0.5, 0],
+                            scale: [0.5, 1.5, 0.5],
                         }}
                         transition={{
-                            duration: 1.5 + Math.random(),
+                            duration: 4 + Math.random() * 6,
                             repeat: Infinity,
-                            ease: "easeIn",
-                            delay: Math.random() * 2
+                            delay: Math.random() * 5
                         }}
                     />
                 ))}
             </div>
 
-            {/* 2. Complex Accretion Disk System */}
-            <div className="absolute w-[700px] h-[700px] animate-[spin_40s_linear_infinite]" style={{ transformStyle: 'preserve-3d' }}>
-                {/* Outer Dust Ring */}
-                <div className="absolute inset-0 rounded-full border-[60px] border-indigo-900/20 blur-[30px]"
-                    style={{ transform: 'rotateX(70deg)' }} />
+            {/* Container for the Gargantua visual - Scaled up */}
+            <div className="relative w-[700px] h-[700px] flex items-center justify-center scale-110">
 
-                {/* Main Cyan Ring */}
-                <div className="absolute inset-[40px] rounded-full border-[30px] border-cyan-500/20 blur-[15px]"
-                    style={{ transform: 'rotateX(70deg)' }} />
+                {/* 2. The Lensed Accretion Disk (The "Halo" Rainbow) - Vertical Wrap */}
+                {/* This represents the light from behind the black hole being bent over the top and bottom */}
+                <div className="absolute w-[600px] h-[600px] rounded-full animate-[spin_60s_linear_infinite_reverse] opacity-80 blur-[20px]">
+                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0%,rgba(251,191,36,0.1)_10%,rgba(245,158,11,0.4)_30%,rgba(180,83,9,0.2)_50%,transparent_60%)]"
+                        style={{ transform: 'rotate(-45deg) scaleY(1.2)' }} />
+                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_180deg,transparent_0%,rgba(251,191,36,0.1)_10%,rgba(245,158,11,0.4)_30%,rgba(180,83,9,0.2)_50%,transparent_60%)]"
+                        style={{ transform: 'rotate(-45deg) scaleY(1.2)' }} />
+                </div>
 
-                {/* Bright Inner Filament */}
-                <div className="absolute inset-[60px] rounded-full border-[2px] border-white/60 blur-[1px] shadow-[0_0_30px_rgba(34,211,238,0.6)]"
-                    style={{ transform: 'rotateX(70deg)' }} />
-
-                {/* Rotating Debris Fields */}
-                {[...Array(3)].map((_, i) => (
-                    <div key={`ring-${i}`}
-                        className="absolute inset-[50px] rounded-full border-[10px] border-transparent border-t-cyan-400/30 blur-[4px]"
+                {/* 3. The Main Accretion Disk (Flat) */}
+                <div className="absolute w-[800px] h-[300px] rounded-[50%] z-20"
+                    style={{
+                        background: 'radial-gradient(ellipse at center, transparent 40%, rgba(251,191,36,0.8) 50%, rgba(234,88,12,0.6) 65%, transparent 75%)',
+                        transform: 'rotate(-10deg)',
+                        filter: 'blur(10px)'
+                    }}
+                >
+                    {/* Texture/Noise Simulation using repeating conic gradients */}
+                    <div className="absolute inset-0 rounded-[50%] opacity-50 animate-[spin_40s_linear_infinite]"
                         style={{
-                            transform: `rotateX(70deg) rotate(${i * 120}deg)`,
-                            animation: `spinReverse ${20 + i * 5}s linear infinite`
+                            background: 'conic-gradient(transparent 0deg, rgba(255,255,255,0.2) 20deg, transparent 40deg, rgba(0,0,0,0.5) 60deg, transparent 80deg, rgba(255,255,255,0.2) 100deg, transparent 120deg)'
                         }}
                     />
-                ))}
+                </div>
+
+                {/* 4. The Event Horizon (Shadow) */}
+                <div className="relative w-[300px] h-[300px] bg-black rounded-full z-30 shadow-[0_0_100px_rgba(245,158,11,0.3)] flex items-center justify-center overflow-hidden">
+
+                    {/* Photon Ring (The bright thin circle immediately around the shadow) */}
+                    <div className="absolute inset-[2px] rounded-full border-[2px] border-orange-200/60 blur-[1px] shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+
+                    {/* Gravitational Redshift Gradient (One side brighter, one dimmer) */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black via-transparent to-orange-900/30 opacity-60" />
+
+                    {/* Pure Black Void */}
+                    <div className="absolute inset-[6px] bg-black rounded-full z-40" />
+                </div>
+
+                {/* 5. Front Accretion Disk (Passing IN FRONT of the shadow) */}
+                {/* We create a clipping mask or just a segment that sits on top of z-30 */}
+                <div className="absolute w-[860px] h-[320px] z-50 pointer-events-none opacity-90 mix-blend-screen"
+                    style={{
+                        transform: 'rotate(-10deg) translateY(20px)',
+                        clipPath: 'polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%)', // Only show bottom half
+                        filter: 'blur(8px)'
+                    }}
+                >
+                    <div className="w-full h-full rounded-[50%]"
+                        style={{
+                            background: 'radial-gradient(ellipse at center, transparent 35%, rgba(253,224,71,0.9) 45%, rgba(234,88,12,0.8) 60%, transparent 70%)'
+                        }}
+                    />
+                </div>
+
+                {/* 6. Cinematic Lens Flare (Horizontal Anamorphic) */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.6 }}
+                    transition={{ duration: 2 }}
+                    className="absolute w-[200%] h-[1px] bg-gradient-to-r from-transparent via-blue-200/40 to-transparent z-50 blur-[1px] rotate-[-5deg]"
+                />
             </div>
-
-            {/* 3. The Photon Sphere (Vertical lensing effect) */}
-            <div className="absolute w-[650px] h-[650px] pointer-events-none mix-blend-screen opacity-60">
-                <div className="absolute inset-0 border-t-[6px] border-b-[2px] border-transparent border-t-cyan-200/50 border-b-cyan-600/20 rounded-full blur-[8px] scale-y-[0.8]" />
-            </div>
-
-            {/* 4. The Singularity Vortex (Replacing the 'Black Spot') */}
-            <div className="relative w-56 h-56 rounded-full overflow-hidden flex items-center justify-center z-10">
-                {/* The Void Itself */}
-                <div className="absolute inset-0 bg-black rounded-full shadow-[0_0_100px_rgba(0,0,0,1)] scale-90" />
-
-                {/* Spinning Vortex Gradient inside the black hole */}
-                <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0%,rgba(6,182,212,0.1)_50%,transparent_100%)] animate-[spin_3s_linear_infinite]" />
-
-                {/* Inner Event Horizon Glow */}
-                <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 blur-[4px] shadow-[inset_0_0_20px_rgba(6,182,212,0.4)]" />
-
-                {/* The "Eye" */}
-                <div className="absolute w-2 h-2 bg-white rounded-full blur-[2px] opacity-50 animate-pulse" />
-            </div>
-
-            {/* 5. Anamorphic Lens Flare (Cinematic Horizontal Streak) */}
-            <div className="absolute w-[180%] h-[2px] bg-gradient-to-r from-transparent via-blue-400/30 to-transparent blur-[2px] mix-blend-screen" />
-            <div className="absolute w-[120%] h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent blur-[0px] mix-blend-overlay" />
 
             <style>{`
-                @keyframes spinReverse {
-                    from { transform: rotateX(70deg) rotate(360deg); }
-                    to { transform: rotateX(70deg) rotate(0deg); }
-                }
+                /* Add subtle noise texture if available or needed, otherwise gradients handle it */
             `}</style>
         </div>
     );
