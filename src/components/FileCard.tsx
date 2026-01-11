@@ -39,7 +39,7 @@ export default function FileCard({ item, onNavigate, onDownload, onDelete, onRen
         >
             <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-start">
-                    <div className={`p-3 rounded-lg ${item.type === 'folder' ? 'bg-blue-50 text-blue-600' : 'bg-secondary text-primary'}`}>
+                    <div className={`p-3 rounded-lg ${item.type === 'folder' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-secondary text-primary'}`}>
                         {item.type === 'folder' ? <Folder className="w-6 h-6" /> : <File className="w-6 h-6" />}
                     </div>
                     <div className="flex gap-1">

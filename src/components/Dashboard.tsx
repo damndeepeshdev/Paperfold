@@ -56,6 +56,7 @@ export default function Dashboard() {
     const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
     const [isRenameOpen, setIsRenameOpen] = useState(false);
     const [renameItem, setRenameItem] = useState<{ id: string, type: 'file' | 'folder', name: string } | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
@@ -225,7 +226,9 @@ export default function Dashboard() {
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString(undefined, {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -493,7 +496,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="flex h-screen bg-[#F8FAFC] dark:bg-gray-950 text-[#1F2937] dark:text-gray-100 font-sans selection:bg-blue-200">
+        <div className="flex h-screen bg-background text-foreground font-sans selection:bg-blue-200">
             {/* Loading Indicator */}
             <AnimatePresence>
                 {isLoading && (
@@ -509,12 +512,12 @@ export default function Dashboard() {
             </AnimatePresence>
 
             {/* Sidebar */}
-            <aside className="w-72 bg-white dark:bg-gray-900 flex flex-col pt-8 pb-6 border-r border-gray-100 dark:border-gray-800 z-20 transition-colors">
+            <aside className="w-72 bg-card flex flex-col pt-8 pb-6 border-r border-border z-20 transition-colors">
                 {/* Logo */}
                 <div className="px-8 mb-10 flex items-center gap-3">
-                    <Cloud className="w-8 h-8 text-blue-600 fill-blue-600" />
-                    <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        Cloud<span className="text-blue-600">Drive</span>
+                    <Cloud className="w-8 h-8 text-blue-600 dark:text-blue-500 fill-blue-600 dark:fill-blue-500" />
+                    <span className="text-2xl font-bold tracking-tight text-foreground">
+                        Cloud<span className="text-blue-600 dark:text-blue-500">Drive</span>
                     </span>
                 </div>
 
@@ -523,10 +526,10 @@ export default function Dashboard() {
                     <div className="relative">
                         <button
                             onClick={() => setIsNewMenuOpen(!isNewMenuOpen)}
-                            className="flex items-center gap-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 px-6 py-4 rounded-2xl shadow-[0_2px_12px_-2px_rgba(0,0,0,0.08)] border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] active:scale-[0.98] w-full"
+                            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98] w-full"
                         >
-                            <Plus className="w-6 h-6 text-blue-600" />
-                            <span className="font-medium text-lg">New</span>
+                            <Plus className="w-5 h-5" />
+                            <span className="font-semibold text-base">New</span>
                         </button>
 
                         {/* Dropdown */}
@@ -538,14 +541,14 @@ export default function Dashboard() {
                                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        className="absolute top-full left-0 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-2 z-20"
+                                        className="absolute top-full left-0 w-full mt-2 bg-popover text-popover-foreground rounded-xl shadow-xl border border-border p-2 z-20"
                                     >
-                                        <button onClick={openCreateFolderModal} className="flex items-center gap-3 w-full p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-left text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
-                                            <FolderPlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                        <button onClick={(e) => { e.stopPropagation(); openCreateFolderModal(); }} className="flex items-center gap-3 w-full p-2 hover:bg-muted rounded-lg text-left text-sm font-medium text-popover-foreground transition-colors">
+                                            <FolderPlus className="w-4 h-4 text-muted-foreground" />
                                             New Folder
                                         </button>
-                                        <button onClick={handleUpload} className="flex items-center gap-3 w-full p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-left text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
-                                            <Upload className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                        <button onClick={(e) => { e.stopPropagation(); handleUpload(); }} className="flex items-center gap-3 w-full p-2 hover:bg-muted rounded-lg text-left text-sm font-medium text-popover-foreground transition-colors">
+                                            <Upload className="w-4 h-4 text-muted-foreground" />
                                             File Upload
                                         </button>
                                     </motion.div>
@@ -563,15 +566,15 @@ export default function Dashboard() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-96 border border-gray-100 dark:border-gray-700"
+                                className="bg-card text-card-foreground rounded-2xl shadow-xl p-6 w-96 border border-border"
                             >
-                                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">New Folder</h3>
+                                <h3 className="text-lg font-semibold mb-4 text-foreground">New Folder</h3>
                                 <form onSubmit={handleCreateFolderSubmit}>
                                     <input
                                         autoFocus
                                         type="text"
                                         placeholder="Folder Name"
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all mb-6"
+                                        className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all mb-6"
                                         value={newFolderName}
                                         onChange={(e) => setNewFolderName(e.target.value)}
                                     />
@@ -579,13 +582,13 @@ export default function Dashboard() {
                                         <button
                                             type="button"
                                             onClick={() => setIsCreateFolderOpen(false)}
-                                            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                            className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-blue-600/20"
+                                            className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/20"
                                             disabled={!newFolderName.trim()}
                                         >
                                             Create
@@ -605,23 +608,23 @@ export default function Dashboard() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-96 border border-gray-100 dark:border-gray-700"
+                                className="bg-background rounded-2xl shadow-xl p-6 w-96 border border-border"
                             >
                                 <div className="flex flex-col items-center text-center mb-6">
-                                    <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
+                                    <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4 text-destructive">
                                         <Trash2 className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delete Item?</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                        Are you sure you want to {itemToDelete.deleteType === 'hard' ? 'permanently delete' : 'move to trash'} <span className="font-medium text-gray-900 dark:text-gray-200">"{itemToDelete.name}"</span>?
+                                    <h3 className="text-lg font-semibold text-foreground">Delete Item?</h3>
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        Are you sure you want to {itemToDelete.deleteType === 'hard' ? 'permanently delete' : 'move to trash'} <span className="font-medium text-foreground">"{itemToDelete.name}"</span>?
                                         {itemToDelete.isFolder && " This will delete all files inside it."}
-                                        {itemToDelete.deleteType === 'hard' && <><br /><span className="text-red-600 dark:text-red-400 font-bold">This action cannot be undone.</span></>}
+                                        {itemToDelete.deleteType === 'hard' && <><br /><span className="text-destructive font-bold">This action cannot be undone.</span></>}
                                     </p>
                                 </div>
                                 <div className="flex justify-end gap-3">
                                     <button
                                         onClick={() => setItemToDelete(null)}
-                                        className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-1 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
+                                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex-1 bg-secondary rounded-lg hover:bg-secondary/80"
                                     >
                                         Cancel
                                     </button>
@@ -657,11 +660,11 @@ export default function Dashboard() {
                                 }
                             }}
                             className={`flex items-center gap-3 w-full px-4 py-3 rounded-full text-sm font-medium transition-colors ${currentSection === item.id
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                         >
-                            <item.icon className={`w-5 h-5 ${currentSection === item.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-500'}`} />
+                            <item.icon className={`w-5 h-5 ${currentSection === item.id ? 'text-primary' : 'text-muted-foreground'}`} />
                             {item.label}
                         </button>
                     ))}
@@ -669,49 +672,43 @@ export default function Dashboard() {
 
                 {/* Storage Status */}
                 <div className="px-6 mt-6">
-                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                        <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
+                    <div className="p-4 rounded-xl bg-secondary/50 border border-border">
+                        <div className="flex items-center gap-2 mb-2 text-primary">
                             <Cloud className="w-5 h-5 fill-current" />
                             <span className="text-sm font-semibold">Storage</span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mb-2 overflow-hidden">
-                            {/* Arbitrary visual progress since storage is "unlimited" or hard to quantify max. 
-                                Let's show a small visual percentage or just a static bar for aesthetics. 
-                                Or simply omit the bar if we assume unlimited. 
-                                User asked for "like total data size". The screenshot has a bar.
-                                Let's just show the text mostly. */}
-                            <div className="bg-blue-600 dark:bg-blue-500 h-1.5 rounded-full w-[10%]"></div>
+                        <div className="w-full bg-secondary rounded-full h-1.5 mb-2 overflow-hidden">
+                            <div className="bg-primary h-1.5 rounded-full transition-all duration-500" style={{ width: (storageUsage === '0.00 B' || storageUsage === '0.00 KB' || storageUsage === '0 B') ? '0%' : '5%' }}></div>
                         </div>
                         <div className="flex justify-between items-end">
-                            <p className="text-lg font-bold text-gray-900 dark:text-white">{storageUsage}</p>
-                            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">Used</p>
+                            <p className="text-lg font-bold text-foreground">{storageUsage}</p>
+                            <p className="text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-full">Used</p>
                         </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Telegram Unlimited Cloud</p>
+                        <p className="text-xs text-muted-foreground mt-1">Telegram Unlimited Cloud</p>
                     </div>
                 </div>
                 {/* User Profile */}
                 {user && (
                     <div className="px-6 pb-6 mt-auto">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                                 {user.first_name[0]}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                                <p className="font-medium text-foreground text-sm truncate">
                                     {user.first_name} {user.last_name || ''}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-xs text-muted-foreground truncate">
                                     {user.phone ? `+${user.phone}` : `ID: ${user.id}`}
                                 </p>
                             </div>
-                            <LogOut size={16} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer" onClick={handleLogout} />
                         </div>
                     </div>
                 )}
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-gray-900 rounded-tl-3xl shadow-[-10px_-10px_30px_rgba(255,255,255,0.8)] dark:shadow-none border-l border-t border-white dark:border-gray-800 transition-colors duration-200">
+            <main className="flex-1 flex flex-col overflow-hidden bg-background rounded-tl-3xl shadow-[-10px_-10px_30px_rgba(0,0,0,0.02)] border-l border-t border-border transition-colors duration-200">
 
                 {/* Header */}
                 <header className="h-20 px-8 flex items-center justify-between border-b border-gray-100/50 dark:border-gray-800 transition-colors duration-200">
@@ -723,7 +720,7 @@ export default function Dashboard() {
                             <input
                                 type="text"
                                 placeholder={`Search in ${folderName}`}
-                                className="w-full h-12 pl-12 pr-4 bg-gray-50 hover:bg-gray-100 focus:bg-white border border-transparent focus:border-blue-200 rounded-full text-sm transition-all outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400 font-medium"
+                                className="w-full h-12 pl-12 pr-4 bg-muted/50 hover:bg-muted focus:bg-background border border-transparent focus:border-ring rounded-full text-sm transition-all outline-none focus:ring-4 focus:ring-ring/10 placeholder:text-muted-foreground font-medium text-foreground"
                             />
                         </div>
                     </div>
@@ -731,28 +728,39 @@ export default function Dashboard() {
                     {/* Actions */}
                     <div className="flex items-center gap-3 ml-4">
                         <button
-                            onClick={() => {
+                            onClick={async () => {
+                                setIsRefreshing(true);
                                 setRefresh(prev => prev + 1);
-                                fetchStorageUsage();
+                                await fetchStorageUsage();
+                                // Add a small delay so the user sees the spin
+                                setTimeout(() => setIsRefreshing(false), 800);
                             }}
-                            className="p-3 hover:bg-gray-100 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                            className="p-3 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
                             title="Refresh"
+                            disabled={isRefreshing}
                         >
-                            <RotateCw className="w-6 h-6" />
+                            <RotateCw className={`w-6 h-6 ${isRefreshing ? 'animate-spin' : ''}`} />
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="p-3 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors"
+                            className="p-3 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors"
                             title="Log Out"
                         >
                             <LogOut className="w-6 h-6" />
                         </button>
                         <button
                             onClick={() => {
-                                document.documentElement.classList.toggle('dark');
-                                setIsDarkMode(!isDarkMode);
+                                const newMode = !isDarkMode;
+                                if (newMode) {
+                                    document.documentElement.classList.add('dark');
+                                    localStorage.setItem('theme', 'dark');
+                                } else {
+                                    document.documentElement.classList.remove('dark');
+                                    localStorage.setItem('theme', 'light');
+                                }
+                                setIsDarkMode(newMode);
                             }}
-                            className="p-3 hover:bg-gray-100 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                            className="p-3 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
                         >
                             {isDarkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
                         </button>
@@ -769,22 +777,22 @@ export default function Dashboard() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-96 border border-gray-100 dark:border-gray-700"
+                                className="bg-background rounded-2xl shadow-xl p-6 w-96 border border-border"
                             >
                                 <div className="flex flex-col items-center text-center mb-6">
-                                    <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
+                                    <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4 text-destructive">
                                         <Trash2 className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Empty Trash?</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                        Are you sure you want to delete <span className="font-medium text-gray-900 dark:text-gray-200">all items</span> in the trash?
-                                        <br /><span className="text-red-600 dark:text-red-400 font-bold">This action cannot be undone.</span>
+                                    <h3 className="text-lg font-semibold text-foreground">Empty Trash?</h3>
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        Are you sure you want to delete <span className="font-medium text-foreground">all items</span> in the trash?
+                                        <br /><span className="text-destructive font-bold">This action cannot be undone.</span>
                                     </p>
                                 </div>
                                 <div className="flex justify-end gap-3">
                                     <button
                                         onClick={() => setIsEmptyTrashOpen(false)}
-                                        className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-1 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
+                                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex-1 bg-secondary rounded-lg hover:bg-secondary/80"
                                     >
                                         Cancel
                                     </button>
@@ -802,15 +810,15 @@ export default function Dashboard() {
 
                 {/* Toolbar / Breadcrumbs */}
                 <div className="px-8 py-6 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                         {breadcrumbs.map((crumb, index) => (
                             <div key={index} className="flex items-center gap-2">
-                                {index > 0 && <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />}
+                                {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground/50" />}
                                 <button
                                     onClick={() => handleBreadcrumbClick(index)}
-                                    className={`hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded-lg transition-colors ${index === breadcrumbs.length - 1
-                                        ? 'text-gray-900 dark:text-white font-bold'
-                                        : 'hover:text-gray-900 dark:hover:text-white'
+                                    className={`hover:bg-muted px-2 py-1 rounded-lg transition-colors ${index === breadcrumbs.length - 1
+                                        ? 'text-foreground font-bold'
+                                        : 'hover:text-foreground'
                                         }`}
                                 >
                                     {crumb.name}
@@ -819,23 +827,36 @@ export default function Dashboard() {
                         ))}
                     </div>
 
-                    <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-full p-1 bg-white dark:bg-gray-900 shadow-sm transition-colors">
-                        <button
-                            onClick={() => setView('list')}
-                            className={`p-2 rounded-full transition-all ${view === 'list'
-                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'
-                                : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
-                        >
-                            <List className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => setView('grid')}
-                            className={`p-2 rounded-full transition-all ${view === 'grid'
-                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'
-                                : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
-                        >
-                            <LayoutGrid className="w-5 h-5" />
-                        </button>
+                    <div className="flex items-center gap-4">
+                        {currentSection === 'trash' && (
+                            <button
+                                onClick={() => setIsEmptyTrashOpen(true)}
+                                disabled={allItems.length === 0}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium ${allItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Empty Trash
+                            </button>
+                        )}
+
+                        <div className="flex items-center gap-2 border border-border rounded-full p-1 bg-card shadow-sm transition-colors">
+                            <button
+                                onClick={() => setView('list')}
+                                className={`p-2 rounded-full transition-all ${view === 'list'
+                                    ? 'bg-secondary text-secondary-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'}`}
+                            >
+                                <List className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setView('grid')}
+                                className={`p-2 rounded-full transition-all ${view === 'grid'
+                                    ? 'bg-secondary text-secondary-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'}`}
+                            >
+                                <LayoutGrid className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -847,9 +868,9 @@ export default function Dashboard() {
                             {itemsSection(allItems.filter(f => f.type === 'file'), "Files")}
                         </>
                     ) : (
-                        <div className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
+                        <div className="border border-border rounded-xl overflow-hidden bg-card">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium">
+                                <thead className="bg-muted text-muted-foreground font-medium">
                                     <tr>
                                         <th className="px-4 py-3">Name</th>
                                         <th className="px-4 py-3">Size</th>
@@ -857,11 +878,11 @@ export default function Dashboard() {
                                         <th className="px-4 py-3 w-32 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tbody className="divide-y divide-border">
                                     {allItems.map(item => (
                                         <tr
                                             key={item.id}
-                                            className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group cursor-pointer"
+                                            className="hover:bg-muted/50 transition-colors group cursor-pointer"
                                             onClick={(e) => {
                                                 if ((e.target as HTMLElement).closest('button')) return;
                                                 if (item.type === 'folder') {
@@ -872,16 +893,16 @@ export default function Dashboard() {
                                                 }
                                             }}
                                         >
-                                            <td className="px-4 py-3 font-medium text-gray-700 dark:text-gray-200 flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${item.type === 'folder' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                                            <td className="px-4 py-3 font-medium text-card-foreground flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${item.type === 'folder' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground'}`}>
                                                     {item.type === 'folder' ? <FolderIcon className="w-4 h-4" /> : <FileIcon className="w-4 h-4" />}
                                                 </div>
                                                 {item.name}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {item.type === 'file' ? formatSize(item.size) : '-'}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {item.modified ? formatDate(item.modified) : '-'}
                                             </td>
                                             <td className="px-4 py-3 text-right">
@@ -892,7 +913,7 @@ export default function Dashboard() {
                                                             setRenameItem({ id: item.id, type: item.type, name: item.name });
                                                             setIsRenameOpen(true);
                                                         }}
-                                                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
+                                                        className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
                                                         title="Rename"
                                                     >
                                                         <Pencil className="w-4 h-4" />
@@ -903,7 +924,7 @@ export default function Dashboard() {
                                                             e.stopPropagation();
                                                             handleToggleStar(item);
                                                         }}
-                                                        className={`p-1.5 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded ${item.is_starred ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}`}
+                                                        className={`p-1.5 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded ${item.is_starred ? 'text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`}
                                                         title={item.is_starred ? "Unstar" : "Star"}
                                                     >
                                                         <Star className={`w-4 h-4 ${item.is_starred ? 'fill-current' : ''}`} />
@@ -915,7 +936,7 @@ export default function Dashboard() {
                                                                 e.stopPropagation();
                                                                 handleDownload(item.id);
                                                             }}
-                                                            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
+                                                            className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
                                                             title="Download"
                                                         >
                                                             <Upload className="w-4 h-4 rotate-180" />
@@ -927,7 +948,7 @@ export default function Dashboard() {
                                                             e.stopPropagation();
                                                             handleTrash(item.id, item.type === 'folder', item.name);
                                                         }}
-                                                        className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-gray-400 hover:text-red-500"
+                                                        className="p-1.5 hover:bg-destructive/10 rounded text-muted-foreground hover:text-destructive"
                                                         title="Delete"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -942,13 +963,17 @@ export default function Dashboard() {
                     )}
 
                     {allItems.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                                <Cloud className="w-12 h-12 opacity-20" />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex flex-col items-center text-center p-8 max-w-sm mx-auto mt-20"
+                        >
+                            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+                                <Cloud className="w-12 h-12 text-muted-foreground/50" />
                             </div>
-                            <p className="text-lg font-medium">Nothing here yet</p>
-                            <p className="text-sm">Upload files or create folders to get started</p>
-                        </div>
+                            <p className="text-lg font-medium text-foreground">Nothing here yet</p>
+                            <p className="text-sm text-muted-foreground mt-2">Upload files or create folders to get started</p>
+                        </motion.div>
                     )}
                 </div>
             </main >
@@ -1052,7 +1077,7 @@ export default function Dashboard() {
                             className="bg-white dark:bg-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-lg font-semibold mb-4 dark:text-white">Rename</h3>
+                            <h3 className="text-lg font-semibold mb-4 text-foreground">Rename</h3>
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
                                 const fd = new FormData(e.currentTarget);
@@ -1076,7 +1101,7 @@ export default function Dashboard() {
                                 <input
                                     name="name"
                                     defaultValue={renameItem.name}
-                                    className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl mb-4 bg-gray-50 dark:bg-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-border rounded-xl mb-4 bg-muted/50 text-foreground outline-none focus:ring-2 focus:ring-blue-500"
                                     autoFocus
                                     onFocus={e => e.target.select()}
                                 />
