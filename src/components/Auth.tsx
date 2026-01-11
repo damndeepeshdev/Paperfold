@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
 import { ChevronDown, ArrowRight, Loader2, Search } from 'lucide-react';
 
@@ -316,8 +316,25 @@ export default function Auth({ onLogin }: AuthProps) {
         }
     };
 
+    // Mouse Tracking for Parallax
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Normalize mouse position from -1 to 1
+            const { innerWidth, innerHeight } = window;
+            const x = (e.clientX / innerWidth) * 2 - 1;
+            const y = (e.clientY / innerHeight) * 2 - 1;
+            mouseX.set(x);
+            mouseY.set(y);
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [mouseX, mouseY]);
+
     return (
-        <div className="h-screen w-full bg-[#050505] text-white flex overflow-hidden font-sans selection:bg-blue-500/30 relative">
+        <div className="h-screen w-full bg-[#030712] text-white flex overflow-hidden font-sans selection:bg-blue-500/30 relative">
 
             {/* Window Drag Region */}
             <div data-tauri-drag-region className="absolute top-0 left-0 right-0 h-8 z-50 bg-transparent" />
@@ -506,7 +523,7 @@ export default function Auth({ onLogin }: AuthProps) {
             <div className="absolute right-0 top-0 bottom-0 w-[55%] pointer-events-none hidden md:block overflow-hidden">
                 {/* 1. The Arch Mask - Enhanced with border glow */}
                 <div className="absolute inset-x-0 bottom-0 top-12 border-t border-l border-white/10 rounded-tl-[300px] overflow-hidden backdrop-blur-[1px] shadow-[inset_10px_10px_50px_rgba(0,0,0,0.5)]">
-                    <GalaxyView />
+                    <GalaxyView mouseX={mouseX} mouseY={mouseY} />
                 </div>
             </div>
 
@@ -514,43 +531,58 @@ export default function Auth({ onLogin }: AuthProps) {
     );
 }
 
-function GalaxyView() {
+function GalaxyView({ mouseX, mouseY }: { mouseX: any, mouseY: any }) {
+    // Parallax Transforms
+    const layer1X = useTransform(mouseX, [-1, 1], [30, -30]);
+    const layer1Y = useTransform(mouseY, [-1, 1], [30, -30]);
+    const layer2X = useTransform(mouseX, [-1, 1], [60, -60]);
+    const layer2Y = useTransform(mouseY, [-1, 1], [60, -60]);
+
     return (
         <div className="relative w-full h-full bg-[#030712] flex items-center justify-center overflow-hidden">
 
-            {/* 2. Rotating Galaxy (Blue Texture) - MULTI-LAYERED */}
+            {/* 2. Rotating Galaxy - With Mouse Parallax */}
             <div className="absolute inset-0 z-0">
-                {/* Slow Deep Core */}
+                {/* Slow Deep Core - Background Layer */}
                 <motion.div
+                    style={{ x: layer1X, y: layer1Y }}
                     animate={{ rotate: 360 }}
                     transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
                     className="absolute -inset-[50%]"
-                    style={{
-                        background: 'conic-gradient(from 0deg, transparent 0%, #0c4a6e 15%, #082f49 30%, transparent 50%, #075985 70%, transparent 90%)',
-                        filter: 'blur(100px) brightness(1.2)'
-                    }}
-                />
+                >
+                    <div className="absolute inset-0"
+                        style={{
+                            background: 'conic-gradient(from 0deg, transparent 0%, #0c4a6e 15%, #082f49 30%, transparent 50%, #075985 70%, transparent 90%)',
+                            filter: 'blur(100px) brightness(1.2)'
+                        }}
+                    />
+                </motion.div>
 
-                {/* Faster Outer Spirals */}
+                {/* Faster Outer Spirals - Foreground Layer (Moves faster with parallax) */}
                 <motion.div
+                    style={{ x: layer2X, y: layer2Y }}
                     animate={{ rotate: -360 }}
                     transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
                     className="absolute -inset-[60%]"
-                    style={{
-                        background: 'conic-gradient(from 180deg, transparent 0%, rgba(14,165,233,0.3) 10%, transparent 25%, rgba(56,189,248,0.2) 45%, transparent 80%)',
-                        filter: 'blur(60px) opacity(0.6)'
-                    }}
-                />
+                >
+                    <div className="absolute inset-0"
+                        style={{
+                            background: 'conic-gradient(from 180deg, transparent 0%, rgba(14,165,233,0.3) 10%, transparent 25%, rgba(56,189,248,0.2) 45%, transparent 80%)',
+                            filter: 'blur(60px) opacity(0.6)'
+                        }}
+                    />
+                </motion.div>
 
                 {/* Pulsing Core Center */}
                 <motion.div
+                    style={{ x: layer1X, y: layer1Y }}
                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                     transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500/20 rounded-full blur-[80px]"
                 />
             </div>
 
-            {/* 3. Twinkling Stars */}
+            {/* 3. Twinkling Stars + 5. Shooting Stars */}
             <div className="absolute inset-0 z-10">
                 {[...Array(60)].map((_, i) => (
                     <motion.div
@@ -570,7 +602,14 @@ function GalaxyView() {
                         }}
                     />
                 ))}
+                <ShootingStarSpawner />
             </div>
+
+            {/* 6. Warp Dust Particles */}
+            <div className="absolute inset-0 z-10 overflow-hidden">
+                <WarpDust />
+            </div>
+
 
             {/* 4. Technical Overlays (Dynamic) */}
             <div className="absolute inset-0 border border-white/5 m-8 rounded-tl-[280px] z-20">
@@ -583,6 +622,18 @@ function GalaxyView() {
                 >
                     <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-white/20" />
                     <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-white/20" />
+
+                    {/* Holographic Glitch effect on crosshair */}
+                    <motion.div
+                        animate={{ opacity: [0, 0.5, 0] }}
+                        transition={{ duration: 0.1, repeat: Infinity, repeatDelay: 5 }}
+                        className="absolute inset-0 border border-blue-400 translate-x-[2px] opacity-0"
+                    />
+                    <motion.div
+                        animate={{ opacity: [0, 0.5, 0] }}
+                        transition={{ duration: 0.1, repeat: Infinity, repeatDelay: 7 }}
+                        className="absolute inset-0 border border-red-400 -translate-x-[2px] opacity-0"
+                    />
                 </motion.div>
 
                 {/* Scanning Radar Line */}
@@ -618,6 +669,69 @@ function GalaxyView() {
             </div>
 
         </div>
+    );
+}
+
+function ShootingStarSpawner() {
+    return (
+        <>
+            <ShootingStar delay={2} />
+            <ShootingStar delay={7} />
+            <ShootingStar delay={12} />
+        </>
+    );
+}
+
+function ShootingStar({ delay }: { delay: number }) {
+    return (
+        <motion.div
+            initial={{ left: '-10%', top: '40%', opacity: 0, scale: 0 }}
+            animate={{
+                left: ['-10%', '120%'],
+                top: ['40%', '60%'],
+                opacity: [0, 1, 0],
+                scale: [0.5, 1, 0.5]
+            }}
+            transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatDelay: delay + Math.random() * 5,
+                ease: "easeIn"
+            }}
+            className="absolute h-[1px] w-[100px] bg-gradient-to-r from-transparent via-white to-transparent rotate-12 z-0"
+        >
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-1 bg-white rounded-full shadow-[0_0_5px_white]" />
+        </motion.div>
+    );
+}
+
+function WarpDust() {
+    return (
+        <>
+            {[...Array(20)].map((_, i) => (
+                <motion.div
+                    key={`dust-${i}`}
+                    initial={{
+                        opacity: 0,
+                        scale: 0,
+                        x: Math.random() * 800 - 400,
+                        y: Math.random() * 800 - 400
+                    }}
+                    animate={{
+                        opacity: [0, 0.5, 0],
+                        scale: [0, 2],
+                        z: [0, 500] // not real Z without preserve-3d parent context but scaling simulates it
+                    }}
+                    transition={{
+                        duration: 3 + Math.random() * 4,
+                        repeat: Infinity,
+                        delay: Math.random() * 5,
+                        ease: "linear"
+                    }}
+                    className="absolute top-1/2 left-1/2 w-1 h-1 bg-white/20 rounded-full"
+                />
+            ))}
+        </>
     );
 }
 
