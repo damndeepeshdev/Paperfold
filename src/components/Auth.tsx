@@ -322,33 +322,16 @@ export default function Auth({ onLogin }: AuthProps) {
             {/* Window Drag Region */}
             <div data-tauri-drag-region className="absolute top-0 left-0 right-0 h-8 z-50 bg-transparent" />
 
-            {/* Background Particles (Stars) */}
-            <div className="absolute inset-0 pointer-events-none">
-                {[...Array(50)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute bg-white rounded-full"
-                        style={{
-                            width: Math.random() < 0.5 ? 1 : 2,
-                            height: Math.random() < 0.5 ? 1 : 2,
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                            opacity: Math.random() * 0.5
-                        }}
-                        animate={{
-                            opacity: [0.1, 0.5, 0.1],
-                        }}
-                        transition={{
-                            duration: 3 + Math.random() * 5,
-                            repeat: Infinity,
-                            delay: Math.random() * 5,
-                        }}
-                    />
-                ))}
-            </div>
+            {/* Background Grid Pattern (Technical Look) */}
+            <div className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
 
             {/* Left Panel - Form */}
-            <div className="w-full md:w-[480px] flex flex-col justify-center px-12 z-20 relative bg-[#050505]/80 backdrop-blur-xl border-r border-white/5 shadow-2xl">
+            <div className="w-full md:w-[480px] flex flex-col justify-center px-12 z-20 relative bg-transparent">
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -519,120 +502,79 @@ export default function Auth({ onLogin }: AuthProps) {
                 </div>
             </div>
 
-            {/* Right Panel - Solar System Visual */}
-            <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-[#020205]">
-                <SolarSystem />
+            {/* Right Panel - Galaxy View (Masked Arch) */}
+            <div className="absolute right-0 top-0 bottom-0 w-[55%] pointer-events-none hidden md:block overflow-hidden">
+                {/* 1. The Arch Mask */}
+                <div className="absolute inset-x-0 bottom-0 top-12 border-t border-l border-white/10 rounded-tl-[300px] overflow-hidden backdrop-blur-[1px]">
+                    <GalaxyView />
+                </div>
             </div>
+
         </div>
     );
 }
 
-function SolarSystem() {
+function GalaxyView() {
     return (
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-            {/* Deep Space Atmosphere */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(14,165,233,0.05)_0%,_transparent_60%)]" />
+        <div className="relative w-full h-full bg-[#030712] flex items-center justify-center overflow-hidden">
 
-            {/* 3D Container (Tilt) - Scaled Down for 'Simplicity/Realism' */}
-            <div className="relative w-[800px] h-[800px] scale-50" style={{ transformStyle: 'preserve-3d', transform: 'rotateX(60deg) rotateZ(-10deg)' }}>
-
-                {/* 1. THE BLUE STAR (Sun) */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full shadow-[0_0_120px_rgba(56,189,248,0.6)] z-10"
+            {/* 2. Rotating Galaxy (Blue Texture) */}
+            <div className="absolute inset-0">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+                    className="absolute -inset-[50%]"
                     style={{
-                        background: 'radial-gradient(circle at center, #E0F2FE 0%, #38BDF8 40%, #0369A1 100%)',
-                        boxShadow: '0 0 80px #0EA5E9, 0 0 150px rgba(14,165,233,0.3)'
+                        background: 'conic-gradient(from 0deg, transparent 0%, #0c4a6e 10%, #082f49 20%, transparent 40%, #075985 60%, transparent 80%)',
+                        filter: 'blur(80px) brightness(1.2)'
                     }}
-                >
-                    {/* Star Atmosphere Pulse */}
-                    <div className="absolute inset-0 rounded-full bg-blue-300 opacity-20 animate-pulse" />
-                </div>
-
-                {/* 2. PLANETS (Realistic muted colors + shading) */}
-
-                {/* Mercury (Rock) */}
-                <PlanetOrbit size={280} duration={12} delay={0} opacity={0.3}>
-                    <div className="w-4 h-4 rounded-full bg-neutral-400 shadow-[inset_-2px_-2px_6px_rgba(0,0,0,0.8)]" />
-                </PlanetOrbit>
-
-                {/* Venus (Cloudy/Gold) */}
-                <PlanetOrbit size={380} duration={18} delay={-5} opacity={0.3}>
-                    <div className="w-5 h-5 rounded-full bg-[#E6C288] shadow-[inset_-2px_-2px_6px_rgba(0,0,0,0.7)]" />
-                </PlanetOrbit>
-
-                {/* Earth (Blue Marble) */}
-                <PlanetOrbit size={500} duration={25} delay={-12} opacity={0.3}>
-                    <div className="w-5 h-5 rounded-full bg-blue-500 shadow-[inset_-2px_-2px_6px_rgba(0,0,0,0.8)] overflow-hidden">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.4)_0%,_transparent_50%)]" />
-                    </div>
-                </PlanetOrbit>
-
-                {/* Mars (Red) */}
-                <PlanetOrbit size={620} duration={32} delay={-8} opacity={0.3}>
-                    <div className="w-4 h-4 rounded-full bg-red-800 shadow-[inset_-2px_-2px_4px_rgba(0,0,0,0.6)]" />
-                </PlanetOrbit>
-
-                {/* Jupiter (Giant) */}
-                <PlanetOrbit size={880} duration={55} delay={-20} opacity={0.25}>
-                    <div className="w-16 h-16 rounded-full bg-[#CFAE94] shadow-[inset_-6px_-6px_15px_rgba(0,0,0,0.7)] overflow-hidden flex items-center justify-center">
-                        {/* Bands */}
-                        <div className="w-full h-2 bg-[#A68A6D]/40 absolute top-4" />
-                        <div className="w-full h-3 bg-[#A68A6D]/40 absolute bottom-4" />
-                    </div>
-                </PlanetOrbit>
-
-                {/* Saturn (Rings) */}
-                <PlanetOrbit size={1150} duration={75} delay={-15} opacity={0.25}>
-                    <div className="relative">
-                        <div className="w-12 h-12 rounded-full bg-[#D4C398] shadow-[inset_-4px_-4px_10px_rgba(0,0,0,0.6)]" />
-                        {/* Rings (More subtle) */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-[12px] border-[#D4C398]/20 border-t-[#D4C398]/10 border-b-[#D4C398]/30 blur-[0.5px]" />
-                    </div>
-                </PlanetOrbit>
-
-                {/* Uranus (Ice Giant) */}
-                <PlanetOrbit size={1350} duration={95} delay={-30} opacity={0.2}>
-                    <div className="w-8 h-8 rounded-full bg-cyan-300/80 shadow-[inset_-3px_-3px_8px_rgba(0,0,0,0.5)]" />
-                </PlanetOrbit>
-
-                {/* Neptune (Dark Blue) */}
-                <PlanetOrbit size={1550} duration={110} delay={-40} opacity={0.2}>
-                    <div className="w-8 h-8 rounded-full bg-blue-800 shadow-[inset_-3px_-3px_8px_rgba(0,0,0,0.7)]" />
-                </PlanetOrbit>
-
+                />
+                <motion.div
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+                    className="absolute -inset-[30%]"
+                    style={{
+                        background: 'conic-gradient(from 180deg, transparent 0%, #0ea5e9 15%, transparent 30%, #38bdf8 50%, transparent 80%)',
+                        filter: 'blur(60px) opacity(0.5)'
+                    }}
+                />
             </div>
 
-            <style>{`
-                 /* No extra physics needed, standard orbits work best for 'realistic' model view */
-            `}</style>
-        </div>
-    );
-}
+            {/* Stars */}
+            <div className="absolute inset-0">
+                {[...Array(50)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute bg-white rounded-full"
+                        style={{
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
+                            width: Math.random() < 0.8 ? 1 : 2,
+                            height: Math.random() < 0.8 ? 1 : 2,
+                            opacity: Math.random() * 0.7
+                        }}
+                    />
+                ))}
+            </div>
 
-// Helper component for orbits
-function PlanetOrbit({ size, duration, delay, opacity = 0.5, children }: { size: number, duration: number, delay: number, opacity?: number, children: React.ReactNode }) {
-    return (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white"
-            style={{
-                width: size,
-                height: size,
-                borderColor: `rgba(255,255,255,${opacity})`,
-                boxShadow: 'none' // Removed glowing tracks for realism
-            }}
-        >
-            <div className="absolute top-0 left-0 w-full h-full animate-[spin_linear_infinite]"
-                style={{
-                    animationDuration: `${duration}s`,
-                    animationDelay: `${delay}s`
-                }}
-            >
-                {/* Planet Container - Positioned at edge */}
-                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2">
-                    {/* Counter-rotate for shading consistency (fake 3D lighting) */}
-                    <div style={{ transform: 'rotateX(-60deg)' }}>
-                        {children}
-                    </div>
+            {/* 3. Technical Overlays (Crosshairs) - Reference Style */}
+            <div className="absolute inset-0 border border-white/5 m-8 rounded-tl-[280px]">
+                {/* Center Crosshair */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/20" />
+                <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-white/10" />
+                <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-white/10" />
+
+                {/* Arch Line */}
+                <div className="absolute top-0 left-0 w-full h-full border-l border-t border-dashed border-white/20 rounded-tl-[280px] scale-90" />
+
+                {/* Data Points */}
+                <div className="absolute top-1/3 left-[60%] text-[10px] font-mono text-cyan-500/60 leading-tight">
+                    <p>sector: orion-09</p>
+                    <p>status: active</p>
+                    <p>coords: 45.2891, 12.002</p>
                 </div>
             </div>
+
         </div>
     );
 }
