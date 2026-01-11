@@ -1,8 +1,8 @@
-# Cloudra ☁️
+# Paperfold ☁️
 
 **Unlimited Cloud Storage, Powered by Telegram.**
 
-Cloudra is a modern, privacy-focused desktop cloud storage client that leverages Telegram's unlimited file storage API. Built with **Tauri (Rust)** and **React**, it offers a premium, high-performance experience with a stunning "Technical Galaxy" aesthetic.
+Paperfold is a modern, privacy-focused desktop cloud storage client that leverages Telegram's unlimited file storage API. Built with **Tauri (Rust)** and **React**, it offers a premium, high-performance experience with a stunning "Technical Galaxy" aesthetic.
 
 ## 🌟 Features
 
@@ -58,8 +58,8 @@ Cloudra is a modern, privacy-focused desktop cloud storage client that leverages
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/damndeepeshdev/Cloudra.git
-    cd Cloudra
+    git clone https://github.com/damndeepeshdev/Paperfold.git
+    cd Paperfold
     ```
 
 2.  **Install Dependencies**
@@ -94,4 +94,4 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
 This project is licensed under the MIT License.
 
 ---
-*Disclaimer: Cloudra is a third-party client and is not affiliated with Telegram.*
+*Disclaimer: Paperfold is a third-party client and is not affiliated with Telegram.*
