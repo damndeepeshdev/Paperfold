@@ -1,5 +1,7 @@
 # Paperfold ☁️
 
+[![Release](https://github.com/damndeepeshdev/Paperfold/actions/workflows/release.yml/badge.svg?event=push)](https://github.com/damndeepeshdev/Paperfold/actions/workflows/release.yml)
+
 **Unlimited Cloud Storage, Powered by Telegram.**
 
 Paperfold is a modern, privacy-focused desktop cloud storage client that leverages Telegram's unlimited file storage API. Built with **Tauri (Rust)** and **React**, it offers a premium, high-performance experience with a stunning "Technical Galaxy" aesthetic.
