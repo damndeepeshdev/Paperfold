@@ -1,6 +1,6 @@
 # Paperfold ☁️
 
-[![Release](https://github.com/damndeepeshdev/Paperfold/actions/workflows/release.yml/badge.svg?event=push)](https://github.com/damndeepeshdev/Paperfold/actions/workflows/release.yml)
+
 
 **Unlimited Cloud Storage, Powered by Telegram.**
 
