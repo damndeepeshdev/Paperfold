@@ -46,15 +46,13 @@ jobs:
         run: |
           cd src-tauri
           cargo build --release -p paperfold-daemon
-          cd ..
-          mkdir -p src-tauri/binaries
 
       - name: Prepare Sidecar (Unix)
         if: matrix.platform != 'windows-latest'
         run: |
           TRIPLE=$(rustc -vV | grep host | cut -d ' ' -f 2)
           echo "Detected triple: $TRIPLE"
-          cp src-tauri/target/release/paperfold-daemon src-tauri/binaries/paperfold-daemon-$TRIPLE
+          cp src-tauri/target/release/paperfold-daemon src-tauri/paperfold-daemon-$TRIPLE
 
       - name: Prepare Sidecar (Windows)
         if: matrix.platform == 'windows-latest'
@@ -62,7 +60,7 @@ jobs:
         run: |
           TRIPLE=$(rustc -vV | grep host | cut -d ' ' -f 2)
           echo "Detected triple: $TRIPLE"
-          cp src-tauri/target/release/paperfold-daemon.exe src-tauri/binaries/paperfold-daemon-$TRIPLE.exe
+          cp src-tauri/target/release/paperfold-daemon.exe src-tauri/paperfold-daemon-$TRIPLE.exe
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
