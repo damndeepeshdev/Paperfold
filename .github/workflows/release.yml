@@ -129,11 +129,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
-             gh release upload ${{ github.ref_name }} src-tauri/target/release/bundle/dmg/*.sig
+             gh release upload ${{ github.ref_name }} src-tauri/target/release/bundle/dmg/*.sig --clobber
           elif [ "$RUNNER_OS" == "Linux" ]; then
-             gh release upload ${{ github.ref_name }} src-tauri/target/release/bundle/appimage/*.sig src-tauri/target/release/bundle/deb/*.sig src-tauri/target/release/bundle/rpm/*.sig 2>/dev/null || true
+             gh release upload ${{ github.ref_name }} src-tauri/target/release/bundle/appimage/*.sig src-tauri/target/release/bundle/deb/*.sig src-tauri/target/release/bundle/rpm/*.sig --clobber 2>/dev/null || true
           elif [ "$RUNNER_OS" == "Windows" ]; then
-             gh release upload ${{ github.ref_name }} src-tauri/target/release/bundle/nsis/*.sig src-tauri/target/release/bundle/msi/*.sig 2>/dev/null || true
+             gh release upload ${{ github.ref_name }} src-tauri/target/release/bundle/nsis/*.sig src-tauri/target/release/bundle/msi/*.sig --clobber 2>/dev/null || true
           fi
 
   publish-latest-json:
