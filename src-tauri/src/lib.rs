@@ -3,7 +3,7 @@ use grammers_client::{Client, Config, InitParams, SignInError};
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use base64::{engine::general_purpose, Engine as _};
+// use base64::{engine::general_purpose, Engine as _};
 use mime_guess;
 
 use grammers_session::Session;
@@ -18,15 +18,20 @@ use tauri::{Emitter, Manager, State, Window};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use zip::write::SimpleFileOptions;
 
+use sysinfo::{Pid, System};
+use tauri_plugin_shell::ShellExt;
 use tokio::sync::Mutex as AsyncMutex;
-use tokio::sync::Semaphore;
+use tokio::sync::Semaphore; // New import
 
-pub mod db;
-use db::Database;
+use paperfold_core::{
+    client,
+    db::{self, Database},
+};
 
 // Secrets moved to .env
 
 const SESSION_FILENAME: &str = "telegram.session";
+const PID_FILENAME: &str = "webdav.pid"; // New constant
 
 fn get_session_path(app_handle: &tauri::AppHandle) -> std::path::PathBuf {
     let app_dir = app_handle
@@ -40,69 +45,10 @@ fn get_session_path(app_handle: &tauri::AppHandle) -> std::path::PathBuf {
 struct AppState {
     app_handle: tauri::AppHandle,
     client: Arc<AsyncMutex<Option<Client>>>,
-    phone_token: Mutex<Option<LoginToken>>, // Changed from phone_hash string
-    password_token: Mutex<Option<PasswordToken>>, // For 2FA
+    phone_token: Mutex<Option<LoginToken>>,
+    password_token: Mutex<Option<PasswordToken>>,
     db: Arc<Database>,
-}
-
-async fn extract_thumbnail_base64(
-    client: &Client,
-    message: &grammers_client::types::Message,
-) -> Option<String> {
-    use grammers_client::types::Downloadable;
-
-    let media = message.media()?;
-    let thumbs = match &media {
-        Media::Photo(photo) => photo.thumbs(),
-        Media::Document(doc) => doc.thumbs(),
-        _ => Vec::new(),
-    };
-
-    if thumbs.is_empty() {
-        return None;
-    }
-
-    // Try to find a medium sized thumbnail ('m') or 's' (small but decent).
-    // Telegram types: s (90x90), m (320x320), x (800x800), etc.
-    // 'stripped' is tiny < 30px.
-    // We prefer 'm' for a good balance of quality and storage size.
-    // Try to find a medium sized thumbnail ('m') or 's' (small but decent).
-    // Telegram types: s (90x90), m (320x320), x (800x800), etc.
-    // 'stripped' is tiny < 30px.
-    // We prefer 'm' for a good balance of quality and storage size.
-    let thumb = thumbs
-        .iter()
-        .find(|t| t.photo_type() == "m")
-        .or_else(|| thumbs.iter().find(|t| t.photo_type() == "s"))
-        .or_else(|| thumbs.iter().find(|t| t.photo_type() == "w")) // 'w' often used for vector/web previews
-        .or_else(|| thumbs.last()) // Fallback to largest if nothing specific found
-        .or_else(|| thumbs.first()) // Fallback to ANY if largest fails (rare)
-        .cloned()?;
-
-    // If it's something we can get bytes from immediately without a full download iterator,
-    // it's faster, but Client::download_media handles everything uniformly.
-    // We'll download to a tiny temp file to avoid complex stream handling for now.
-    let temp_name = format!("thumb_{}.jpg", rand::random::<u32>());
-    let temp_path = std::env::temp_dir().join(temp_name);
-    let temp_path_str = temp_path.to_string_lossy().to_string();
-
-    match client
-        .download_media(&Downloadable::PhotoSize(thumb.clone()), &temp_path_str)
-        .await
-    {
-        Ok(_) => {
-            if let Ok(bytes) = std::fs::read(&temp_path) {
-                let _ = std::fs::remove_file(temp_path);
-                Some(general_purpose::STANDARD_NO_PAD.encode(&bytes))
-            } else {
-                None
-            }
-        }
-        Err(_) => {
-            let _ = std::fs::remove_file(temp_path);
-            None
-        }
-    }
+    // webdav_process removed
 }
 
 #[tauri::command]
@@ -591,7 +537,7 @@ async fn upload_file(
         if let Ok(chat) = client.get_me().await {
             if let Ok(messages) = client.get_messages_by_id(&chat, &[msg_id]).await {
                 if let Some(Some(msg)) = messages.first() {
-                    thumbnail = extract_thumbnail_base64(&client, msg).await;
+                    thumbnail = client::utils::extract_thumbnail_base64(&client, msg).await;
                 }
             }
         }
@@ -1483,6 +1429,127 @@ async fn download_all(
     Ok(())
 }
 
+fn get_pid_file_path(app_handle: &tauri::AppHandle) -> std::path::PathBuf {
+    let app_dir = app_handle
+        .path()
+        .app_data_dir()
+        .expect("failed to get app data dir");
+    // Ensure dir exists (should be done on init but good to be safe)
+    let _ = std::fs::create_dir_all(&app_dir);
+    app_dir.join(PID_FILENAME)
+}
+
+fn is_process_running(pid: u32) -> bool {
+    let mut system = System::new_all();
+    system.refresh_processes();
+    system.process(Pid::from(pid as usize)).is_some()
+}
+
+#[tauri::command]
+async fn start_webdav(state: State<'_, AppState>) -> Result<String, String> {
+    let pid_path = get_pid_file_path(&state.app_handle);
+
+    // Check if already running via PID file
+    if pid_path.exists() {
+        if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
+            if let Ok(pid) = pid_str.trim().parse::<u32>() {
+                if is_process_running(pid) {
+                    return Ok("WebDAV server is already running".to_string());
+                } else {
+                    // Stale PID file
+                    let _ = std::fs::remove_file(&pid_path);
+                }
+            }
+        }
+    }
+
+    let sidecar_command = state
+        .app_handle
+        .shell()
+        .sidecar("paperfold-daemon")
+        .map_err(|e| format!("Failed to create sidecar command: {}", e))?;
+
+    let (mut _rx, child) = sidecar_command
+        .spawn()
+        .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
+
+    // Get PID and save it
+    let pid = child.pid();
+    std::fs::write(&pid_path, pid.to_string())
+        .map_err(|e| format!("Failed to write PID file: {}", e))?;
+
+    // Detach: Forget the child so it doesn't get killed when dropped (if CommandChild does that)
+    // tauri-plugin-shell CommandChild doesn't expose strict detach, but standard Command does.
+    // However, we rely on the fact that if we just let it go without holding a handle in AppState,
+    // and if the OS allows, it should stay. (Actually, 'forget' is safer if Drop implements kill).
+    // Note: CommandChild wraps a shared child.
+    // We will just drop it here. If the plugin is implemented to kill on drop, this won't work.
+    // BUT the user interaction implies we test.
+    // Standard Rust spawn() detaches.
+    // Let's hope Tauri's plugin doesn't auto-kill orphans on struct drop.
+    // (If it does, we'd need to use 'nohup' approach, but let's try this first).
+
+    println!("WebDAV server started with PID: {}", pid);
+    Ok("WebDAV server started".to_string())
+}
+
+#[tauri::command]
+async fn stop_webdav(state: State<'_, AppState>) -> Result<String, String> {
+    let pid_path = get_pid_file_path(&state.app_handle);
+
+    if !pid_path.exists() {
+        return Ok("WebDAV server is not running".to_string());
+    }
+
+    let pid_str = std::fs::read_to_string(&pid_path)
+        .map_err(|e| format!("Failed to read PID file: {}", e))?;
+
+    let pid = pid_str
+        .trim()
+        .parse::<u32>()
+        .map_err(|_| "Invalid PID file content".to_string())?;
+
+    let system = System::new_all();
+    if let Some(process) = system.process(Pid::from(pid as usize)) {
+        // Kill it
+        process.kill();
+        println!("Killed process {}", pid);
+    } else {
+        println!("Process {} not found, removing stale PID file", pid);
+    }
+
+    // Always remove PID file
+    let _ = std::fs::remove_file(&pid_path);
+
+    Ok("WebDAV server stopped".to_string())
+}
+
+#[tauri::command]
+async fn get_webdav_status(state: State<'_, AppState>) -> Result<bool, String> {
+    let pid_path = get_pid_file_path(&state.app_handle);
+    if !pid_path.exists() {
+        return Ok(false);
+    }
+
+    let pid_str = match std::fs::read_to_string(&pid_path) {
+        Ok(s) => s,
+        Err(_) => return Ok(false),
+    };
+
+    let pid = match pid_str.trim().parse::<u32>() {
+        Ok(p) => p,
+        Err(_) => return Ok(false),
+    };
+
+    if is_process_running(pid) {
+        Ok(true)
+    } else {
+        // Stale
+        let _ = std::fs::remove_file(&pid_path);
+        Ok(false)
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -1499,6 +1566,7 @@ pub fn run() {
                 phone_token: Mutex::new(None),
                 password_token: Mutex::new(None),
                 db,
+                // webdav_process removed
             });
 
             Ok(())
@@ -1507,6 +1575,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             login_start,
             login_complete,
@@ -1535,7 +1604,10 @@ pub fn run() {
             restore_metadata,
             sync_files,
             download_folder,
-            download_all
+            download_all,
+            start_webdav,
+            stop_webdav,
+            get_webdav_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

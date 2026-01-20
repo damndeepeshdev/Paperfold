@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::RwLock;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,7 +67,7 @@ struct DataStore {
 
 pub struct Database {
     db_path: PathBuf,
-    store: Mutex<DataStore>,
+    store: RwLock<DataStore>,
 }
 
 impl Database {
@@ -83,14 +83,14 @@ impl Database {
 
         Database {
             db_path,
-            store: Mutex::new(store),
+            store: RwLock::new(store),
         }
     }
 
     fn save(&self) {
         let file = File::create(&self.db_path).unwrap();
         let writer = BufWriter::new(file);
-        serde_json::to_writer(writer, &*self.store.lock().unwrap()).unwrap();
+        serde_json::to_writer(writer, &*self.store.read().unwrap()).unwrap();
     }
 
     // Helper to get a unique name (e.g. "Folder (1)")
@@ -143,7 +143,7 @@ impl Database {
     }
 
     pub fn create_folder(&self, name: &str, parent_id: Option<String>) -> String {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
 
         // Ensure unique name
         let final_name = self.get_unique_name(&store, parent_id.as_ref(), name, true);
@@ -183,7 +183,7 @@ impl Database {
     }
 
     pub fn list_contents(&self, folder_id: Option<String>) -> (Vec<Folder>, Vec<FileMetadata>) {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         let folders = store
             .folders
             .iter()
@@ -200,7 +200,7 @@ impl Database {
     }
 
     pub fn list_trash(&self) -> (Vec<Folder>, Vec<FileMetadata>) {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         let folders = store
             .folders
             .iter()
@@ -212,12 +212,12 @@ impl Database {
     }
 
     pub fn get_file(&self, id: &str) -> Option<FileMetadata> {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         store.files.iter().find(|f| f.id == id).cloned()
     }
 
     pub fn lookup_folder_name(&self, id: &str) -> Option<String> {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         store
             .folders
             .iter()
@@ -234,7 +234,7 @@ impl Database {
         message_id: i32,
         thumbnail: Option<String>,
     ) -> FileMetadata {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
 
         // Ensure unique name
         let final_name = self.get_unique_name(&store, folder_id.as_ref(), &name, false);
@@ -267,7 +267,7 @@ impl Database {
 
     // Soft delete
     pub fn trash_item(&self, id: &str, is_folder: bool) {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -297,7 +297,7 @@ impl Database {
     }
 
     pub fn restore_item(&self, id: &str, is_folder: bool) {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         if is_folder {
             if let Some(f) = store.folders.iter_mut().find(|f| f.id == id) {
                 f.trashed = false;
@@ -315,7 +315,7 @@ impl Database {
 
     // Hard delete (Permanent)
     pub fn delete_file(&self, id: &str) -> bool {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         let len_before = store.files.len();
         store.files.retain(|f| f.id != id);
         let deleted = store.files.len() < len_before;
@@ -327,7 +327,7 @@ impl Database {
     }
 
     pub fn delete_folder(&self, id: &str) -> Vec<FileMetadata> {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
 
         // 1. Find all files in this folder (recursive TODO later, for now flat)
         let deleted_files: Vec<FileMetadata> = store
@@ -350,7 +350,7 @@ impl Database {
     }
 
     pub fn rename_file(&self, id: &str, new_name: &str) -> bool {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         if let Some(file) = store.files.iter_mut().find(|f| f.id == id) {
             file.name = new_name.to_string();
             drop(store); // release lock before save
@@ -361,8 +361,44 @@ impl Database {
         }
     }
 
+    pub fn move_file(&self, id: &str, target_folder_id: Option<String>, new_name: &str) -> bool {
+        let mut store = self.store.write().unwrap();
+        if let Some(file) = store.files.iter_mut().find(|f| f.id == id) {
+            // Basic unique name check could be added here similar to add_file
+            // For now, we assume caller (WebDAV) handles name collisions or we just overwrite
+            file.folder_id = target_folder_id;
+            file.name = new_name.to_string();
+            drop(store);
+            self.save();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn move_folder(&self, id: &str, target_parent_id: Option<String>, new_name: &str) -> bool {
+        let mut store = self.store.write().unwrap();
+        // Prevent moving folder into itself (simple check)
+        if let Some(target) = &target_parent_id {
+            if target == id {
+                return false;
+            }
+            // Deep cycle check omitted for brevity, but should be considered for prod
+        }
+
+        if let Some(folder) = store.folders.iter_mut().find(|f| f.id == id) {
+            folder.parent_id = target_parent_id;
+            folder.name = new_name.to_string();
+            drop(store);
+            self.save();
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn rename_folder(&self, id: &str, new_name: &str) -> bool {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         if let Some(folder) = store.folders.iter_mut().find(|f| f.id == id) {
             folder.name = new_name.to_string();
             drop(store);
@@ -374,7 +410,7 @@ impl Database {
     }
 
     pub fn get_folder_stats(&self, folder_id: &str) -> (i64, i32) {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         self.calculate_stats_recursive(&store, folder_id)
     }
 
@@ -427,7 +463,7 @@ impl Database {
         // view_mode update logic or separate? Let's add it.
         view_mode: Option<String>,
     ) -> bool {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         if let Some(folder) = store.folders.iter_mut().find(|f| f.id == id) {
             if let Some(c) = color {
                 folder.color = if c.is_empty() { None } else { Some(c) };
@@ -471,7 +507,7 @@ impl Database {
     }
 
     pub fn cleanup_trash(&self, days: i64) -> Vec<FileMetadata> {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -536,7 +572,7 @@ impl Database {
     }
 
     pub fn toggle_star(&self, id: &str, is_folder: bool) -> bool {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         let mut found = false;
 
         if is_folder {
@@ -559,7 +595,7 @@ impl Database {
     }
 
     pub fn get_starred(&self) -> (Vec<Folder>, Vec<FileMetadata>) {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         let folders = store
             .folders
             .iter()
@@ -576,7 +612,7 @@ impl Database {
     }
 
     pub fn search_items(&self, query: &str) -> (Vec<Folder>, Vec<FileMetadata>) {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         let query_lower = query.to_lowercase();
 
         let folders = store
@@ -603,7 +639,7 @@ impl Database {
     }
 
     pub fn get_total_usage(&self) -> i64 {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         // Sum size of all NON-TRASHED files
         store
             .files
@@ -613,25 +649,25 @@ impl Database {
             .sum()
     }
     pub fn get_all_files(&self) -> Vec<FileMetadata> {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         store.files.clone()
     }
 
     pub fn get_all_folders(&self) -> Vec<Folder> {
-        let store = self.store.lock().unwrap();
+        let store = self.store.read().unwrap();
         store.folders.clone()
     }
 
     pub fn delete_files_by_ids(&self, ids: &[String]) {
         {
-            let mut store = self.store.lock().unwrap();
+            let mut store = self.store.write().unwrap();
             store.files.retain(|f| !ids.contains(&f.id));
         }
         self.save();
     }
 
     pub fn reload(&self) {
-        let mut store = self.store.lock().unwrap();
+        let mut store = self.store.write().unwrap();
         if self.db_path.exists() {
             if let Ok(file) = File::open(&self.db_path) {
                 let reader = BufReader::new(file);

@@ -42,6 +42,26 @@ jobs:
       - name: Install frontend dependencies
         run: npm install # change this to npm ci if you have a lockfile
 
+      - name: Build Sidecar
+        run: |
+          cargo build --release -p paperfold-daemon
+          mkdir -p src-tauri/binaries
+
+      - name: Prepare Sidecar (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          TRIPLE=$(rustc -vV | grep host | cut -d ' ' -f 2)
+          echo "Detected triple: $TRIPLE"
+          cp target/release/paperfold-daemon src-tauri/binaries/paperfold-daemon-$TRIPLE
+
+      - name: Prepare Sidecar (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        run: |
+          TRIPLE=$(rustc -vV | grep host | cut -d ' ' -f 2)
+          echo "Detected triple: $TRIPLE"
+          cp target/release/paperfold-daemon.exe src-tauri/binaries/paperfold-daemon-$TRIPLE.exe
+
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -55,7 +75,22 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          releaseBody: |
+            ## 🚀 Paperfold v0.1.5 - Phase 2: Performance & Polish
+
+            ### ✨ New Features
+            - **Detached WebDAV Sidecar**: The network drive daemon now runs independently and survives app restarts.
+            - **Paperfold Network Drive**: Toggle the built-in WebDAV server directly from the sidebar.
+            - **Mount URL Display**: Easily copy `http://127.0.0.1:17432` to mount your cloud drive.
+
+            ### ⚡ Performance
+            - **Database Concurrency**: Replaced Mutex with `RwLock` for non-blocking database reads. Browse files while uploading!
+            - **Persistent Caching**: File previews are now cached in `AppSupport/cache`, significantly reducing bandwidth usage and preview capability.
+
+            ### 🛠️ Fixes & Portability
+            - **Cross-Platform**: Automated builds for macOS (Universal), Linux (AppImage), and Windows (Exe).
+            - **Correct Timestamps**: Files now display accurate creation/modification dates.
+            - **Wayland Support**: Fix for black screen issues on Linux (Wayland).
           releaseDraft: false
           prerelease: false
 

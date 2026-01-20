@@ -7,3 +7,6 @@
 /gen/schemas
 .env
 /telegram.session
+binaries/
+paperfold-daemon-*
+webdav.pid

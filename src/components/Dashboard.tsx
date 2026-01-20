@@ -33,7 +33,8 @@ import {
     Tag,
     Palette,
     Smile,
-    Grid
+    Grid,
+    Server
 } from 'lucide-react';
 import FileCard, { FileItem } from './FileCard';
 import { invoke } from '@tauri-apps/api/core';
@@ -307,6 +308,35 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
             setStorageUsage(usage);
         } catch (e) {
             console.error("Failed to fetch storage usage", e);
+        }
+    };
+
+    // WebDAV State
+    const [isWebDavRunning, setIsWebDavRunning] = useState(false);
+    const [isWebDavLoading, setIsWebDavLoading] = useState(false);
+
+    useEffect(() => {
+        invoke<boolean>('get_webdav_status')
+            .then(setIsWebDavRunning)
+            .catch(console.error);
+    }, []);
+
+    const handleToggleWebDav = async () => {
+        if (isWebDavLoading) return;
+        setIsWebDavLoading(true);
+        try {
+            if (isWebDavRunning) {
+                await invoke('stop_webdav');
+                setIsWebDavRunning(false);
+            } else {
+                await invoke('start_webdav');
+                setIsWebDavRunning(true);
+            }
+        } catch (e) {
+            console.error("Failed to toggle WebDAV", e);
+            alert("Failed to toggle WebDAV: " + e);
+        } finally {
+            setIsWebDavLoading(false);
         }
     };
 
@@ -1871,6 +1901,37 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </button>
                     ))}
                 </nav>
+
+                {/* WebDAV Toggle */}
+                <div className="px-4 mt-2 mb-2">
+                    <div className="h-px bg-white/5" />
+                </div>
+
+                <div className="px-4 mb-2">
+                    <button
+                        onClick={handleToggleWebDav}
+                        disabled={isWebDavLoading}
+                        className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${isWebDavRunning
+                            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                            }`}
+                    >
+                        {isWebDavLoading ? (
+                            <Loader2 className="w-[18px] h-[18px] animate-spin text-gray-500" />
+                        ) : (
+                            <Server className={`w-[18px] h-[18px] transition-colors ${isWebDavRunning ? 'text-green-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
+                        )}
+                        <div className="flex flex-col items-start leading-none">
+                            <span>Paperfold Network Drive</span>
+                            <span className="text-[10px] mt-1 opacity-60 font-normal">
+                                {isWebDavLoading ? 'Updating...' : (isWebDavRunning ? 'Running' : 'Stopped')}
+                            </span>
+                            {isWebDavRunning && !isWebDavLoading && (
+                                <span className="text-[9px] text-cyan-400 font-mono mt-0.5 select-all">http://127.0.0.1:17432</span>
+                            )}
+                        </div>
+                    </button>
+                </div>
 
                 {/* Storage Status */}
                 <div className="px-6 mt-6">

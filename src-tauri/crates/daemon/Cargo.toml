@@ -1,0 +1,19 @@
+[package]
+name = "paperfold-daemon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+paperfold-core = { path = "../core" }
+dav-server = "0.5.8"
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.10"
+hyper = { version = "0.14", features = ["full"] }
+dotenv = "0.15.0"
+bytes = "1"
+futures = "0.3"
+grammers-client = "0.7"
+mime_guess = "2.0"
+warp = "0.3"
