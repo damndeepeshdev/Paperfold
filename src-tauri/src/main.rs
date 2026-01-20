@@ -7,6 +7,8 @@ fn main() {
     {
         std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        // Force X11 backend to avoid Wayland rendering issues (grey screen)
+        std::env::set_var("GDK_BACKEND", "x11");
     }
 
     telegram_cloud_lib::run()

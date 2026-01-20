@@ -76,21 +76,27 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "App v__VERSION__"
           releaseBody: |
-            ## 🚀 Paperfold v0.1.5 - Phase 2: Performance & Polish
+            ## 🚀 Paperfold v0.1.5 - Phase 2: Infinite Persistence
 
-            ### ✨ New Features
-            - **Detached WebDAV Sidecar**: The network drive daemon now runs independently and survives app restarts.
-            - **Paperfold Network Drive**: Toggle the built-in WebDAV server directly from the sidebar.
-            - **Mount URL Display**: Easily copy `http://127.0.0.1:17432` to mount your cloud drive.
+            ### ✨ New Infinite Sidecar
+            - **Detached Daemon**: The WebDAV server now runs as a completely independent process. It survives app restarts, crashes, and prevents zombie processes.
+            - **Smart Persistence**: Automatically detects existing daemon processes via PID file checks.
+            - **Network Drive Control**: Toggle the server on/off directly from the sidebar.
 
-            ### ⚡ Performance
-            - **Database Concurrency**: Replaced Mutex with `RwLock` for non-blocking database reads. Browse files while uploading!
-            - **Persistent Caching**: File previews are now cached in `AppSupport/cache`, significantly reducing bandwidth usage and preview capability.
+            ### 🐧 Linux & Wayland Perfected
+            - **Wayland Native Support**: Fixed persistent "grey screen" and rendering issues by enforcing X11 backend compatibility (`GDK_BACKEND=x11`).
+            - **Smart URL Detection**: Linux users now see `dav://127.0.0.1:17432` for one-click mounting in Nautilus/Nemo/Dolphin.
+            - **Universal AppImage**: A single `.AppImage` build that works flawlessly on both X11 and Wayland sessions.
 
-            ### 🛠️ Fixes & Portability
-            - **Cross-Platform**: Automated builds for macOS (Universal), Linux (AppImage), and Windows (Exe).
-            - **Correct Timestamps**: Files now display accurate creation/modification dates.
-            - **Wayland Support**: Fix for black screen issues on Linux (Wayland).
+            ### ⚡ Core Upgrades
+            - **Non-Blocking Database**: Replaced Mutex with `RwLock` in the core database. Browsing files is now instant, even during heavy background uploads.
+            - **Persistent Caching**: File previews are cached to disk (`AppSupport/cache`), saving bandwidth and providing instant loads on repeat visits.
+            - **Correct Timestamps**: Files now properly display their cloud creation and modification dates instead of the UNIX epoch.
+
+            ### 📦 Installation
+            - **Linux**: Download the `.AppImage`, make it executable (`chmod +x`), and run.
+            - **Windows**: Run the `.exe` installer.
+            - **macOS**: Open the `.dmg` (Universal Binary).
           releaseDraft: false
           prerelease: false
 

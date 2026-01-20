@@ -1927,7 +1927,9 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                                 {isWebDavLoading ? 'Updating...' : (isWebDavRunning ? 'Running' : 'Stopped')}
                             </span>
                             {isWebDavRunning && !isWebDavLoading && (
-                                <span className="text-[9px] text-cyan-400 font-mono mt-0.5 select-all">http://127.0.0.1:17432</span>
+                                <span className="text-[9px] text-cyan-400 font-mono mt-0.5 select-all">
+                                    {window.navigator.userAgent.includes("Linux") ? "dav://127.0.0.1:17432" : "http://127.0.0.1:17432"}
+                                </span>
                             )}
                         </div>
                     </button>
