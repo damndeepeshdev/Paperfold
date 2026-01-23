@@ -26,6 +26,7 @@ export interface FileItem {
     show_badges?: boolean;
     tags?: string[];
     description?: string;
+
 }
 
 interface FileCardProps {
@@ -164,6 +165,7 @@ export default function FileCard({ item, isSelected, onNavigate, onPreview, onCo
                                     />
                                 )
                             )}
+
                         </div>
                     </div>
                 )}

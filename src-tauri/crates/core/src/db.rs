@@ -173,6 +173,7 @@ impl Database {
             tags: None,
             description: None,
             view_mode: None,
+
             last_modified: now,
         };
 
@@ -225,6 +226,11 @@ impl Database {
             .map(|f| f.name.clone())
     }
 
+    pub fn get_folder_by_id(&self, id: &str) -> Option<Folder> {
+        let store = self.store.read().unwrap();
+        store.folders.iter().find(|f| f.id == id).cloned()
+    }
+
     pub fn add_file(
         &self,
         folder_id: Option<String>,
@@ -256,6 +262,7 @@ impl Database {
             trashed: false,
             trashed_at: None,
             is_starred: false,
+
             thumbnail,
         };
 
@@ -664,6 +671,28 @@ impl Database {
             store.files.retain(|f| !ids.contains(&f.id));
         }
         self.save();
+    }
+
+    pub fn get_existing_message_ids(&self) -> Vec<i32> {
+        let store = self.store.read().unwrap();
+        store.files.iter().map(|f| f.message_id).collect()
+    }
+
+    pub fn move_file_to_sync_folder(
+        &self,
+        message_id: i32,
+        target_folder_id: &str,
+    ) -> Result<(), String> {
+        let mut store = self.store.write().unwrap();
+        if let Some(file) = store.files.iter_mut().find(|f| f.message_id == message_id) {
+            // Only move if currently in root (folder_id is None)
+            if file.folder_id.is_none() {
+                file.folder_id = Some(target_folder_id.to_string());
+                drop(store);
+                self.save();
+            }
+        }
+        Ok(())
     }
 
     pub fn reload(&self) {

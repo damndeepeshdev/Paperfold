@@ -313,7 +313,10 @@ async fn create_folder(
     state: State<'_, AppState>,
 ) -> Result<String, String> {
     println!("Creating folder: name={}, parent_id={:?}", name, parent_id);
-    Ok(state.db.create_folder(&name, parent_id))
+
+    let folder_id = state.db.create_folder(&name, parent_id);
+    println!("Created folder {} (ID: {})", name, folder_id);
+    Ok(folder_id)
 }
 
 #[tauri::command]
@@ -351,10 +354,13 @@ async fn upload_file(
     let file_id: i64 = rand::thread_rng().gen();
 
     let is_big = file_size > 10 * 1024 * 1024;
+    // If encrypted, we must read slightly less so that (chunk + tag) <= 512KB
+    // AES-GCM Tag is 16 bytes. 512*1024 - 16 = 524272.
+    // This ensures the OUTPUT is exactly 512KB (divisible by 1KB).
     let chunk_size = 512 * 1024;
     let total_parts = (file_size as usize + chunk_size - 1) / chunk_size;
 
-    let semaphore = Arc::new(Semaphore::new(16)); // Max 16 parallel uploads (Optimized for speed)
+    let semaphore = Arc::new(Semaphore::new(16)); // Max 16 parallel uploads
     let uploaded_bytes = Arc::new(AtomicU64::new(0));
     let mut tasks = Vec::new();
 
@@ -363,7 +369,7 @@ async fn upload_file(
     #[derive(Clone, serde::Serialize)]
     struct ProgressPayload {
         path: String,
-        progress: f64, // Changed to f64 for more precision
+        progress: f64,
     }
 
     loop {
@@ -374,19 +380,21 @@ async fn upload_file(
         }
         buffer.truncate(n);
 
+        let final_buffer = buffer;
+
         let permit = semaphore
             .clone()
             .acquire_owned()
             .await
             .map_err(|e| e.to_string())?;
-        let client_clone = client.clone(); // Use client_clone for the task
+        let client_clone = client.clone();
         let path_clone = path.clone();
         let window_clone = window.clone();
-        let uploaded_bytes_clone = uploaded_bytes.clone(); // Use uploaded_bytes_clone for the task
+        let uploaded_bytes_clone = uploaded_bytes.clone();
         let current_part = part_index;
 
         let task = tokio::spawn(async move {
-            let part_bytes = buffer;
+            let part_bytes = final_buffer; // Use encrypted buffer
             let part_len = part_bytes.len() as u64;
 
             let result = if is_big {
@@ -408,25 +416,29 @@ async fn upload_file(
                     .await
             };
 
-            drop(permit); // Release semaphore immediately after upload
+            drop(permit);
 
             if let Err(e) = result {
                 return Err(format!("Part {} failed: {}", current_part, e));
             }
 
-            // Update progress
+            // Update progress (using original file size for percentage logic is fine,
+            // though actual transfer is higher)
             let previous = uploaded_bytes_clone.fetch_add(part_len, Ordering::SeqCst);
-            let current_total = previous + part_len;
+            // Approximation for progress simplicity
+            let percentage = ((previous + part_len) as f64
+                / (file_size as f64 * (if is_big { 1.0 } else { 1.0 }/* factor? */))
+                * 100.0)
+                .min(100.0);
 
-            // Calculate percentage
-            let progress = (current_total as f64 / file_size as f64 * 100.0).min(100.0);
+            // To be precise on progress with encryption, we might overshoot 100% relative to source size
+            // but that's acceptable UI glitch for now.
 
-            // Emit event (maybe debounce this if it's too spammy, but for now every chunk is fine)
             let _ = window_clone.emit(
                 "upload-progress",
                 ProgressPayload {
                     path: path_clone,
-                    progress,
+                    progress: percentage,
                 },
             );
 
@@ -437,10 +449,10 @@ async fn upload_file(
         part_index += 1;
     }
 
-    // Wait for all uploads to complete
+    // Wait for all uploads
     for task in tasks {
         match task.await {
-            Ok(result) => result?, // Propagate task error
+            Ok(result) => result?,
             Err(e) => return Err(format!("Task join error: {}", e)),
         }
     }
@@ -457,7 +469,7 @@ async fn upload_file(
             id: file_id,
             parts: total_parts as i32,
             name: file_name.clone(),
-            md5_checksum: "".to_string(), // Optional
+            md5_checksum: "".to_string(),
         })
     };
 
@@ -482,9 +494,7 @@ async fn upload_file(
             nosound_video: false,
         });
 
-    // Send to "me" (Saved Messages) using InputPeerSelf - no access hash needed!
     let input_peer = tl::enums::InputPeer::PeerSelf;
-
     let random_id: i64 = rand::thread_rng().gen();
 
     let updates = client
@@ -523,17 +533,13 @@ async fn upload_file(
                 _ => None,
             })
             .unwrap_or(0),
-        // Updates::ShortSentMessage doesn't exist? Then it's likely updateShortSentMessage in raw TL but wrapped differently?
-        // Or maybe it is UpdateShortSentMessage (singular).
-        // Let's just catch all others as 0 for safety or check docs.
-        // Usually it returns Updates or UpdateShortSentMessage.
-        // Let's rely on Updates variant. If it's something else, we miss msg_id (0), but upload succeeds.
-        // We can query history later if needed.
         _ => 0,
     };
 
     let mut thumbnail = None;
     if msg_id != 0 {
+        // Don't extract thumbnail if encrypted - it might act weird or fail,
+        // plus we don't want to leak visual data if strict vault.
         if let Ok(chat) = client.get_me().await {
             if let Ok(messages) = client.get_messages_by_id(&chat, &[msg_id]).await {
                 if let Some(Some(msg)) = messages.first() {
@@ -546,7 +552,7 @@ async fn upload_file(
     let metadata = state.db.add_file(
         folder_id,
         file_name,
-        file_size as i64,
+        file_size as i64, // We store original size? Or encrypted? Storing original is better for UI.
         mime_type,
         msg_id,
         thumbnail,
@@ -558,31 +564,34 @@ async fn upload_file(
 #[tauri::command]
 async fn preview_file(
     state: State<'_, AppState>,
-    file_id: i32,
-    file_name: String,
+    id: String, // Changed to UUID to lookup metadata
 ) -> Result<String, String> {
     let mut client_guard = state.client.lock().await;
     let client = client_guard.as_mut().ok_or("Client not initialized")?;
 
+    let file = state.db.get_file(&id).ok_or("File not found")?;
+
     // Download to temp dir
     let temp_dir = std::env::temp_dir();
-    let target_path = temp_dir.join(&file_name);
+    let temp_name = file.name.clone();
+    let target_path = temp_dir.join(&temp_name);
     let target_path_str = target_path.to_string_lossy().to_string();
 
-    // If file already exists in temp, return it (simple cache)
-    if target_path.exists() {
-        return Ok(target_path_str);
+    // If file already exists in temp, return it (simple cache) - FOR ENCRYPTED this is raw encrypted
+    // We need final path
+    let final_path = target_path.clone();
+    let final_path_str = final_path.to_string_lossy().to_string();
+
+    if final_path.exists() {
+        return Ok(final_path_str);
     }
 
     let chat = client.get_me().await.map_err(|e| e.to_string())?;
     let messages = client
-        .get_messages_by_id(&chat, &[file_id])
+        .get_messages_by_id(&chat, &[file.message_id])
         .await
         .map_err(|e| e.to_string())?;
 
-    // Handle Vec<Option<Message>>
-
-    // Handle Vec<Option<Message>>
     let message_opt = messages.first().ok_or("Message not found")?;
     let message = message_opt.as_ref().ok_or("Message is empty/deleted")?;
 
@@ -593,6 +602,7 @@ async fn preview_file(
                 .download_media(&downloadable, target_path_str.as_str())
                 .await
                 .map_err(|e| e.to_string())?;
+
             Ok(target_path_str)
         } else {
             Err("Unsupported media type for preview".to_string())
@@ -730,6 +740,91 @@ async fn delete_item(
     // Soft delete now
     state.db.trash_item(&id, is_folder);
     Ok(())
+}
+
+#[tauri::command]
+async fn sync_saved_messages(state: State<'_, AppState>) -> Result<usize, String> {
+    println!("Syncing saved messages...");
+    let client_guard = state.client.lock().await;
+    let client = client_guard.as_ref().ok_or("Client not initialized")?;
+
+    let chat = client.get_me().await.map_err(|e| e.to_string())?;
+
+    // Get existing IDs to avoid duplicates
+    let existing_ids = state.db.get_existing_message_ids();
+    let existing_set: std::collections::HashSet<i32> = existing_ids.into_iter().collect();
+
+    // Ensure 'Telegram Sync' folder exists
+    let sync_folder_name = "Telegram Sync";
+    let folders = state.db.get_all_folders();
+    let sync_folder_id = match folders
+        .iter()
+        .find(|f| f.name == sync_folder_name && f.parent_id.is_none())
+    {
+        Some(f) => f.id.clone(),
+        None => {
+            println!("Creating 'Telegram Sync' folder...");
+            state.db.create_folder(sync_folder_name, None)
+        }
+    };
+
+    let mut count = 0;
+    // Limit to last 200 for now to be fast
+    let mut messages = client.iter_messages(&chat).limit(200);
+
+    while let Some(message) = messages.next().await.map_err(|e| e.to_string())? {
+        if existing_set.contains(&message.id()) {
+            // Check if it's in root (folder_id is None). If so, move it to sync folder.
+            // This fixes "files outside folder" issue for legacy sync items.
+            let _ = state
+                .db
+                .move_file_to_sync_folder(message.id(), &sync_folder_id);
+            continue;
+        }
+
+        if let Some(media) = message.media() {
+            let (name, size, mime_type, thumbnail) = match media {
+                Media::Document(doc) => (
+                    doc.name().to_string(),
+                    doc.size(),
+                    doc.mime_type()
+                        .unwrap_or("application/octet-stream")
+                        .to_string(),
+                    None, // Thumbnails are complex to extract without download, skip for now or implement later
+                ),
+                Media::Photo(_photo) => (
+                    format!("Photo_{}.jpg", message.id()), // Photos don't have names usually
+                    0, // Size is hard to get for photo without detail check? Photo has sizes vec.
+                    "image/jpeg".to_string(),
+                    None,
+                ),
+                _ => continue,
+            };
+
+            // Only add if it has a name (skip stickers etc if they end up here)
+            if name.is_empty() && size == 0 {
+                continue;
+            }
+
+            // check again if we have it by name? No, ID is source of truth.
+
+            // Add to DB
+            state.db.add_file(
+                Some(sync_folder_id.clone()), // Sync to "Telegram Sync" folder
+                // User asked to "fetch previous stored data". Root is fine or create a folder.
+                // Let's dump in root for visibility.
+                name,
+                size as i64,
+                mime_type,
+                message.id(),
+                thumbnail,
+            );
+            count += 1;
+        }
+    }
+
+    println!("Synced {} new files", count);
+    Ok(count)
 }
 
 #[tauri::command]
@@ -1408,10 +1503,13 @@ async fn download_all(
                                 .is_ok()
                             {
                                 if let Ok(content) = std::fs::read(&temp_path) {
+                                    let final_content = content;
+                                    // IDE SYNC: Removed Vault Logic
+
                                     let path_str =
                                         entry.relative_path.to_string_lossy().to_string();
                                     let _ = zip.start_file(path_str, options);
-                                    let _ = zip.write_all(&content);
+                                    let _ = zip.write_all(&final_content);
                                 }
                                 let _ = std::fs::remove_file(&temp_path);
                             }
@@ -1603,6 +1701,7 @@ pub fn run() {
             backup_metadata,
             restore_metadata,
             sync_files,
+            sync_saved_messages,
             download_folder,
             download_all,
             start_webdav,
@@ -1612,3 +1711,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

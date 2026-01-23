@@ -34,7 +34,7 @@ import {
     Palette,
     Smile,
     Grid,
-    Server
+    Server,
 } from 'lucide-react';
 import FileCard, { FileItem } from './FileCard';
 import { invoke } from '@tauri-apps/api/core';
@@ -79,6 +79,11 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
+
+
+
+
+
 
     useEffect(() => {
         const unlistenPromise = listen('download-progress', (event: any) => {
@@ -432,6 +437,8 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
             }
 
             if (item.type === 'folder') {
+
+
                 handleNavigate(item.id, item.name);
             } else {
                 handlePreview(item);
@@ -641,8 +648,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                 if (!file) return;
 
                 const path = await invoke<string>('preview_file', {
-                    fileId: file.message_id,
-                    fileName: file.name
+                    id: file.id
                 });
 
                 // Fallback attempt: Read file directly using FS plugin
@@ -735,6 +741,8 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
             console.error("Upload selection failed", e);
         }
     };
+
+
 
     const openCreateFolderModal = () => {
         setIsNewMenuOpen(false);
@@ -1790,6 +1798,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                                             <FolderPlus className="w-4 h-4 text-cyan-500/70" />
                                             New Folder
                                         </button>
+
                                         <button onClick={(e) => { e.stopPropagation(); handleUpload(); }} className="flex items-center gap-3 w-full p-2.5 hover:bg-white/5 rounded-lg text-left text-sm font-medium text-gray-300 hover:text-white transition-colors">
                                             <Upload className="w-4 h-4 text-cyan-500/70" />
                                             File Upload
@@ -1859,6 +1868,10 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                     )}
                 </AnimatePresence>
+
+
+
+
 
                 {/* Delete Confirmation Modal */}
 
@@ -2088,17 +2101,27 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                         <button
                             onClick={async () => {
                                 setIsRefreshing(true);
-                                setRefresh(prev => prev + 1);
                                 try {
+                                    // Run both sync operations
                                     await invoke('sync_files');
+                                    const count = await invoke<number>('sync_saved_messages');
+
+                                    if (count > 0) {
+                                        setUpdateStatus(`Synced ${count} new files`);
+                                        setTimeout(() => setUpdateStatus(null), 4000);
+                                    }
+
+                                    setRefresh(prev => prev + 1);
                                 } catch (e) {
                                     console.error("Sync failed", e);
+                                    setUpdateStatus("Sync failed: " + e); // Show error
+                                    setTimeout(() => setUpdateStatus(null), 3000);
                                 }
                                 await fetchStorageUsage();
-                                setTimeout(() => setIsRefreshing(false), 800);
+                                setIsRefreshing(false);
                             }}
                             className="p-2.5 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-full text-gray-400 hover:text-cyan-400 transition-all disabled:opacity-50"
-                            title="Refresh"
+                            title="Sync & Refresh"
                             disabled={isRefreshing}
                         >
                             <RotateCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -2166,6 +2189,8 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                                                 <Cloud className="w-4 h-4 text-cyan-400" />
                                                 Download All Backup
                                             </button>
+
+
 
                                             <div className="h-px bg-white/5 my-1" />
 

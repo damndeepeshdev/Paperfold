@@ -9,6 +9,7 @@ export interface FileMetadata {
     is_starred?: boolean;
     thumbnail?: string;
     path_display?: string;
+
 }
 
 export interface Folder {
@@ -29,4 +30,5 @@ export interface Folder {
     description?: string;
     view_mode?: 'grid' | 'list';
     last_modified?: number;
+
 }
